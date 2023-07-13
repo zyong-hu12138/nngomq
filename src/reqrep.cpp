@@ -27,10 +27,14 @@ void REQ::_send(char *topic,char *payload)
 {
     int rv;
     char *buf = NULL;
-    size_t sz;
+    Py_ssize_t sz;
     char *msg = (char *)malloc(strlen(topic) + strlen(payload) + strlen(SEPARATOR) + 1);
     sprintf(msg, "%s%s%s", topic, SEPARATOR, payload);
-    if((rv = nng_send(req_sock, msg, strlen(msg) + 1, 0)) != 0)
+    PyObject *pyBytes = congverStringToBytes(msg);
+    // if((rv = nng_send(req_sock, msg, strlen(msg) + 1, 0)) != 0)
+    //     fatal("nng_send", rv);
+    PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
+        if((rv = nng_send(req_sock, buf, sz, 0)) != 0)
         fatal("nng_send", rv);
 
     free(msg);
@@ -81,6 +85,7 @@ void REQ::_recv()
     {
         if((rv = nng_recv(req_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
             fatal("nng_recv", rv);
+        getPyObjectAsString(buf,sz,buf);//反序列化后的结果
         char *topic = strtok(buf, SEPARATOR);
         char *payload = strtok(NULL, SEPARATOR);
         cout<<"req _recv"<<endl;
@@ -117,6 +122,7 @@ void REP::main_thread(void (*func)(char* ,char *))
         if((rv = nng_recv(rep_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
             fatal("nng_recv", rv);
         cout<<"rep recv"<<endl;
+        getPyObjectAsString(buf,sz,buf);//反序列化后的结果
         char *topic = strtok(buf, SEPARATOR);
         char *payload = strtok(NULL, SEPARATOR);
         message msg={topic,payload};
@@ -129,7 +135,10 @@ void REP::main_thread(void (*func)(char* ,char *))
         else{
             cout<<topic<<":"<<payload<<endl;
         }
-        if((rv = nng_send(rep_sock, buf, strlen(buf)+1, 0)) != 0)
+        PyObject *pyBytes = congverStringToBytes("ok");
+        Py_ssize_t sz;
+        PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
+        if((rv = nng_send(rep_sock, buf,sz, 0)) != 0)
             fatal("nng_send", rv);
         nng_free(buf, strlen(buf)+1);
         

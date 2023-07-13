@@ -46,15 +46,22 @@ message("src:${src}")
 add_library(parameter ${src}/parameter.cpp)
 add_library(utils ${src}/utils.cpp)
 # add_library(udp udp.cpp)
+add_library(pickle ${src}/pickle.cpp)
 add_library(reqrep ${src}/reqrep.cpp)
 add_library(bus ${src}/bus.cpp)
 target_include_directories(parameter PUBLIC ${include})
+target_include_directories(pickle PUBLIC ${include})
 target_include_directories(utils PUBLIC ${include})
 # target_include_directories(udp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(reqrep PUBLIC ${include})
 target_include_directories(bus PUBLIC ${include})
+# 查找并导入 Python 库
+find_package(Python REQUIRED COMPONENTS Interpreter Development)
 
-add_executable(test ${src}/bus.cpp ${src}/parameter.cpp ${src}/reqrep.cpp ${src}/utils.cpp ${test}/test.cpp)
+# 添加包含目录和链接库
+include_directories(${Python_INCLUDE_DIRS})
+link_libraries(${Python_LIBRARIES})
+add_executable(test ${src}/bus.cpp ${src}/parameter.cpp ${src}/reqrep.cpp ${src}/utils.cpp ${test}/test.cpp ${src}/pickle.cpp)
 
 # 添加头文件搜索路径
 target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -67,3 +74,5 @@ target_link_libraries(test utils)
 # target_link_libraries(test udp)
 target_link_libraries(test reqrep)
 target_link_libraries(test bus)
+target_link_libraries(test pickle)
+

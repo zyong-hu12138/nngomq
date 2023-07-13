@@ -9,6 +9,7 @@
 #include <nng/nng.h>
 #include <nng/protocol/reqrep0/rep.h>
 #include <nng/protocol/reqrep0/req.h>
+#include "pickle.h"
 using namespace std;
 // extern ReqRepMulticast *udp ;
 //未实现UDP功能
