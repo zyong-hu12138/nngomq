@@ -38,19 +38,23 @@ project(test)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # 添加可执行文件
+set(src ${CMAKE_CURRENT_SOURCE_DIR}/src)
+set(include ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set (test ${CMAKE_CURRENT_SOURCE_DIR}/test)
+# 设置文件位置
 
-add_library(parameter parameter.cpp)
-add_library(utils utils.cpp)
+add_library(parameter ${src}/parameter.cpp)
+add_library(utils ${src}/utils.cpp)
 # add_library(udp udp.cpp)
-add_library(reqrep reqrep.cpp)
-add_library(bus bus.cpp)
-target_include_directories(parameter PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+add_library(reqrep ${src}/reqrep.cpp)
+add_library(bus ${src}/bus.cpp)
+target_include_directories(parameter PUBLIC ${include})
+target_include_directories(utils PUBLIC ${include})
 # target_include_directories(udp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(reqrep PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(bus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(reqrep PUBLIC ${include})
+target_include_directories(bus PUBLIC ${include})
 
-add_executable(test test1.cpp parameter.cpp utils.cpp reqrep.cpp bus.cpp)
+add_executable(test ${src}/*.cpp)
 
 # 添加头文件搜索路径
 target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

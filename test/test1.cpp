@@ -10,6 +10,8 @@
 using namespace std;
 int main()
 {
+    void callback(char*topic,char*payload);
+
     Bus bus1("127.0.0.1",5001),bus2("127.0.0.1",5002),bus3("127.0.0.1",5003);
     char *topic1 = "hello";
     char *payload1 = "world";
@@ -18,11 +20,13 @@ int main()
     bus3.subscribe(topic2);
     bus1.publish(topic1,payload1);
     bus1.publish(topic2,payload1);
-    bus2.recv();
-    bus3.recv();
+    bus2.recv(*callback);
+    bus3.recv(*callback);
     bus1._send_thread();
-
-
-
     return 0;
+}
+void callback(char*topic,char*payload)
+{
+    cout<<"callback"<<endl;
+    printf("topic:%s,payload:%s\n",topic,payload);
 }
