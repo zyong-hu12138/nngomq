@@ -16,16 +16,14 @@ int main()
     Py_Initialize();
     string ip="127.0.0.1";
     REP rep(Target {data(ip),51100});
-    REQ req(Target {data(ip),51100},100,100,0);
+    REQ req(Target {data(ip),51100},100,100,true);
     char *topic = "hello";
     char *payload = "world";
     void callback(char *topic,char *payload);
-    // rep.loop_start();//rep接收消息
-    req._send(topic,payload);//发送信息
     rep.loop_start(callback);//rep接收消息
-    // rep.reply(topic,payload);
-    req._recv();
-    Py_Finalize();
+    req.send(topic,payload);//发送信息
+    sleep(10);
+    // Py_Finalize();
     return 0;
 }
 void callback(char *topic,char *payload)

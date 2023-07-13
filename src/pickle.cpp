@@ -1,16 +1,17 @@
 #include <Python.h>
 #include <string.h>
 #include "pickle.h"
+#include <iostream>
 using namespace std;
 PyObject *congverStringToBytes(const char *str)
 {   
-    // Py_Initialize();
-
+    Py_Initialize();
     PyObject *pyString = PyUnicode_FromString(str);
     PyObject *pyPickleModule = PyImport_ImportModule("pickle");
     PyObject *pyDumpsFunc = PyObject_GetAttrString(pyPickleModule, "dumps");
     PyObject *pyArgs = PyTuple_Pack(1, pyString);
     PyObject *pyBytes = PyObject_CallObject(pyDumpsFunc, pyArgs);
+
     Py_DECREF(pyString);
     Py_DECREF(pyPickleModule);
     Py_DECREF(pyDumpsFunc);

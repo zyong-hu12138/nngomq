@@ -31,7 +31,7 @@ class REQ
         int _send_count;
         vector<message> _queue;
     public:
-        REQ(Target target,int send_timeout=100,int recv_timeout = 100,bool is_async = 0)
+        REQ(Target target,int send_timeout,int recv_timeout ,bool is_async )
         {
             int rv;
             if((rv = nng_req0_open(&req_sock)) != 0)
@@ -45,13 +45,13 @@ class REQ
             cout<<"req::"<<url<<endl;
             if((rv = nng_dial(req_sock,url, NULL, 0)) != 0)
                 fatal("nng_dial", rv);//连接到指定的URL
-            is_async = is_async;
+            this->is_async = is_async;
             _send_count = 0;
-            // if(is_async)
-            // {
-            //     thread tid(&REQ::_send_thread,this);
-            //     tid.detach();
-            // }
+            if(is_async)
+            { 
+                thread tid(&REQ::_send_thread,this);
+                tid.detach();
+            }
         }
         ~REQ()
         {
