@@ -32,6 +32,7 @@ void REQ::_send(char *topic,char *payload)
     sprintf(msg, "%s%s%s", topic, SEPARATOR, payload);
     if((rv = nng_send(req_sock, msg, strlen(msg) + 1, 0)) != 0)
         fatal("nng_send", rv);
+
     free(msg);
 }
 void REQ::_send_thread()
@@ -62,7 +63,7 @@ message REQ::send(char *topic,char *payload)
         int rv;
         if((rv = nng_recv(req_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
             fatal("nng_recv", rv);
-        cout<<"_send"<<endl;
+        // cout<<"_send"<<endl;
         char *topic = strtok(buf, SEPARATOR);
         char *payload = strtok(NULL, SEPARATOR);
         message msg={topic,payload};
@@ -74,13 +75,19 @@ void REQ::_recv()
     int rv;
     char *buf = NULL;
     size_t sz;
-    cout<<"req _recv"<<endl;
-    if((rv = nng_recv(req_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
-        fatal("nng_recv", rv);
-    char *topic = strtok(buf, SEPARATOR);
-    char *payload = strtok(NULL, SEPARATOR);
-    cout<<"req _recv"<<endl;
-    cout<<topic<<payload<<endl;
+    // cout<<1<<endl;
+    sleep(0.01);
+    while(1)
+    {
+        if((rv = nng_recv(req_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
+            fatal("nng_recv", rv);
+        char *topic = strtok(buf, SEPARATOR);
+        char *payload = strtok(NULL, SEPARATOR);
+        cout<<"req _recv"<<endl;
+        cout<<topic<<payload<<endl;
+        if(rv==0)
+            exit(0);
+    }
 }
 void REQ::recv()
 {
@@ -103,15 +110,20 @@ void REP::main_thread()
     int rv;
     char *buf = NULL;
     size_t sz;
+    // cout<<2<<endl;
+    sleep(0.01);
     while(1)
     {
         if((rv = nng_recv(rep_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
             fatal("nng_recv", rv);
+        cout<<"rep recv"<<endl;
         char *topic = strtok(buf, SEPARATOR);
         char *payload = strtok(NULL, SEPARATOR);
         message msg={topic,payload};
         _queue.push_back(msg);
-        printf("REP: %s %s\n", topic, payload);
+        printf("REP GET: %s %s\n", topic, payload);
+        if(rv==0)
+            break;
     }
 }
 void REP::loop_start()
@@ -130,9 +142,11 @@ void REP::reply(char *topic,char *payload)
     size_t sz;
     char *msg = (char *)malloc(strlen(topic) + strlen(payload) + strlen(SEPARATOR) + 1);
     sprintf(msg, "%s%s%s", topic, SEPARATOR, payload);
-    cout<<"rep reply"<<endl;
+    // cout<<"rep reply"<<endl;
     if((rv = nng_send(rep_sock, msg, strlen(msg) + 1, 0)) != 0)
         fatal("nng_send", rv);
+        // cout<<"rep reply"<<endl;
+        sleep(0.01);
     free(msg);
 }
 

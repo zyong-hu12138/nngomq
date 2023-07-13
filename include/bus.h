@@ -12,20 +12,19 @@ using namespace std;
 #define SEPARATOR "^&*;"
 //bus 通信urls还是必要的，记录已经有的节点dial 的地址，
 extern vector <string> urls;
-extern vector <nng_socket> bus_socks; //用来监听连接的套接字
+// extern vector <nng_socket> bus_socks; //用来监听连接的套接字
+void fatal(char *func, int rv);
 class Bus
 {
     private:
-    int _base_port;
-    int _end_port;
     char *ip;
     int port;
     vector <message> _queue;//定义消息队列
     vector <string> topics;//定义主题队列
     // vector <nng_socket>  bus_socks;//定义总线发送队列
-    nng_socket bus_sock;
+    nng_socket bus_sock; //负责监听的套接字
     public:
-        Bus();
+        Bus(char *ip,int port);
         // {
             // int rv;
             // if((rv = nng_bus0_open(&bus_sock)) != 0)
@@ -51,10 +50,10 @@ class Bus
             _queue.clear();
             topics.clear();
         }
-        void dial(char *ip,int port);//每个bus节点dial到一个端口，该端口被所有节点监听
+        // void dial(char *ip,int port);//每个bus节点dial到一个端口，该端口被所有节点监听
         // void dial();
         // void listen(char *ip,int port);
-        void listen();
+        // void listen();
         void __enter__();
         void __exit__();
         void publish(char* topic,char* payload);//发送信息到总线，先传入队列中
@@ -62,8 +61,9 @@ class Bus
         void close();
         void loop_start();
         void on_message(char* topic,char* payload);
-        void _recv_thread();
+        void _recv_thread(void (*func)(char*,char*));
         void _send_thread();
+        void recv(void (*func)(char*,char*));
         //void _notify_thread();
 
 };

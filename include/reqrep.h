@@ -46,11 +46,11 @@ class REQ
                 fatal("nng_dial", rv);//连接到指定的URL
             is_async = is_async;
             _send_count = 0;
-            if(is_async)
-            {
-                thread tid(&REQ::_send_thread,this);
-                tid.detach();
-            }
+            // if(is_async)
+            // {
+            //     thread tid(&REQ::_send_thread,this);
+            //     tid.detach();
+            // }
         }
         ~REQ()
         {
@@ -90,12 +90,12 @@ class REP  //响应请求
             port = addr.port;
             // while(1)
             // {
-                sprintf(url, "tcp://%s:%d", addr,port);
-                if((rv = nng_listen(rep_sock, url, NULL, 0)) == 0)
-                {
-                    printf("listen to port %d\n",port);
-                    // break;
-                }
+            sprintf(url, "tcp://%s:%d", addr,port);
+            if((rv = nng_listen(rep_sock, url, NULL, 0)) == 0)
+            {
+                printf("listen to port %d\n",port);
+                // break;
+            }
                 // else if (rv !=0)
                 // {    
                 //     printf(" port %d In Use\n",port);

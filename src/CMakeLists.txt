@@ -8,14 +8,14 @@
 
 # add_library(parameter parameter.cpp)
 # add_library(utils utils.cpp)
-# add_library(udp udp.cpp)
+# # add_library(udp udp.cpp)
 # add_library(reqrep reqrep.cpp)
 # target_include_directories(parameter PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # target_include_directories(utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-# target_include_directories(udp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# # target_include_directories(udp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # target_include_directories(reqrep PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-# add_executable(test test.cpp parameter.cpp utils.cpp udp.cpp reqrep.cpp)
+# add_executable(test test.cpp parameter.cpp utils.cpp reqrep.cpp)
 
 # # 添加头文件搜索路径
 # target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -25,11 +25,11 @@
 # target_compile_definitions(test PRIVATE NNG_ELIDE_DEPRECATED)#添加动态库文件
 # target_link_libraries(test parameter)
 # target_link_libraries(test utils)
-# target_link_libraries(test udp)
+# # target_link_libraries(test udp)
 # target_link_libraries(test reqrep)
 
 
-####bus#######
+# ####bus#######
 
 cmake_minimum_required(VERSION 3.10)
 project(test)
@@ -41,14 +41,16 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(parameter parameter.cpp)
 add_library(utils utils.cpp)
-add_library(udp udp.cpp)
+# add_library(udp udp.cpp)
+add_library(reqrep reqrep.cpp)
 add_library(bus bus.cpp)
 target_include_directories(parameter PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(utils PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
-target_include_directories(udp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+# target_include_directories(udp PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(reqrep PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(bus PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(test test1.cpp parameter.cpp utils.cpp udp.cpp bus.cpp)
+add_executable(test test1.cpp parameter.cpp utils.cpp reqrep.cpp bus.cpp)
 
 # 添加头文件搜索路径
 target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -58,5 +60,6 @@ target_link_libraries(test nng::nng)#添加动态库文件
 target_compile_definitions(test PRIVATE NNG_ELIDE_DEPRECATED)#添加动态库文件
 target_link_libraries(test parameter)
 target_link_libraries(test utils)
-target_link_libraries(test udp)
+# target_link_libraries(test udp)
+target_link_libraries(test reqrep)
 target_link_libraries(test bus)
