@@ -3,6 +3,7 @@
 #include <vector>
 #include <iostream>
 #include <unistd.h>
+#include <functional>
 #define SEPARATOR "^&*;"
 vector <string> urls;
 // vector <nng_socket> bus_socks; //用来监听连接的套接字
@@ -28,73 +29,7 @@ Bus::Bus(char *ip,int port)
     if((rv = nng_listen(bus_sock, url, NULL, 0)) != 0)
         fatal("nng_listen", rv);
 }
-// void Bus::dial(char *ip,int port)//每个节点对应一个发送端口
-// {
-//     int rv;
-//     nng_socket tmp_sock;
-//     char url[20];
-//     sprintf(url, "tcp://%s:%d", ip,port);
-//     if((rv = nng_bus0_open(&tmp_sock)) != 0)
-//         fatal("nng_bus_open", rv);
-//     if((rv = nng_listen(tmp_sock, url, NULL, 0)) != 0)
-//         fatal("nng_listen", rv);
-//     if((rv = nng_dial(bus_sock, url, NULL, 0)) != 0)
-//         fatal("nng_dial", rv);
-//     bus_socks.push_back(tmp_sock);
-//     urls.push_back(url);
-//     // cout<<"dial sucess"<<endl;
-//     // cout<<bus_socks.size()<<endl;
-// }
-// void Bus::dial()
-// {
-//     int rv;
-//     for(int i=0;i<urls.size();i++)
-//     {
-//         char *url=(char*)urls[i].data();
-//         // cout<<url<<endl;
-//         nng_socket sock;
-//         if((rv = nng_bus0_open(&sock)) != 0)
-//             fatal("nng_bus_open", rv);
-//         bus_socks.push_back(sock);
-//         if((rv = nng_dial(sock, url, NULL, 0)) != 0)
-//             fatal("nng_dial", rv);
-//     }
-// }
 
-// void Bus::listen(char *ip,int port)
-// {
-//     int rv;
-//     nng_socket tmp_sock;
-//     char url[20];
-//     sprintf(url, "tcp://%s:%d",ip,port);
-//     urls.push_back(url);
-//     // cout<<url<<endl;
-//     if((rv = nng_listen(bus_sock, url, NULL, 0)) != 0)
-//         fatal("nng_listen", rv);
-//     // bus_socks.push_back(bus_sock);
-   
-// }
-// void Bus::listen()
-// {
-//     int rv;
-    
-//     // cout<<urls.size()<<endl;
-//     bus_socks.clear();
-//     for(int i=0;i<urls.size();i++)
-//     {
-//         nng_socket tmp_sock;
-//         char *url=(char*)urls[i].data();
-//         // cout<<url<<endl;
-//         if((rv = nng_bus0_open(&tmp_sock)) != 0)
-//             fatal("nng_bus_open", rv);
-//         if((rv = nng_listen(tmp_sock, url, NULL, 0)) != 0)
-//             fatal("nng_listen", rv);
-//         cout<<"listen sucess"<<endl;
-//         bus_socks.push_back(tmp_sock);
-//         nng_close(tmp_sock);
-//     }
-//     cout<<bus_socks.size()<<endl;
-// }
 void Bus::__enter__()
 {
     int rv;
@@ -137,10 +72,11 @@ void Bus::loop_start()
 }
 void Bus::recv(void (*func)(char*,char*))
 {
-    thread tid(&Bus::_recv_thread,func);
+    function<void(char* ,char*)> funcWrapper = func;
+    thread tid(&Bus::_recv_thread,this,funcWrapper);
     tid.detach();
 }
-void Bus::_recv_thread(void (*func)(char*,char*))
+void Bus::_recv_thread(function <void(char*,char*)> func)
 {
     int rv;
     char *buf = NULL;
@@ -222,3 +158,71 @@ void display()
         cout<<urls[i]<<endl;
     }
 }
+
+// void Bus::dial(char *ip,int port)//每个节点对应一个发送端口
+// {
+//     int rv;
+//     nng_socket tmp_sock;
+//     char url[20];
+//     sprintf(url, "tcp://%s:%d", ip,port);
+//     if((rv = nng_bus0_open(&tmp_sock)) != 0)
+//         fatal("nng_bus_open", rv);
+//     if((rv = nng_listen(tmp_sock, url, NULL, 0)) != 0)
+//         fatal("nng_listen", rv);
+//     if((rv = nng_dial(bus_sock, url, NULL, 0)) != 0)
+//         fatal("nng_dial", rv);
+//     bus_socks.push_back(tmp_sock);
+//     urls.push_back(url);
+//     // cout<<"dial sucess"<<endl;
+//     // cout<<bus_socks.size()<<endl;
+// }
+// void Bus::dial()
+// {
+//     int rv;
+//     for(int i=0;i<urls.size();i++)
+//     {
+//         char *url=(char*)urls[i].data();
+//         // cout<<url<<endl;
+//         nng_socket sock;
+//         if((rv = nng_bus0_open(&sock)) != 0)
+//             fatal("nng_bus_open", rv);
+//         bus_socks.push_back(sock);
+//         if((rv = nng_dial(sock, url, NULL, 0)) != 0)
+//             fatal("nng_dial", rv);
+//     }
+// }
+
+// void Bus::listen(char *ip,int port)
+// {
+//     int rv;
+//     nng_socket tmp_sock;
+//     char url[20];
+//     sprintf(url, "tcp://%s:%d",ip,port);
+//     urls.push_back(url);
+//     // cout<<url<<endl;
+//     if((rv = nng_listen(bus_sock, url, NULL, 0)) != 0)
+//         fatal("nng_listen", rv);
+//     // bus_socks.push_back(bus_sock);
+   
+// }
+// void Bus::listen()
+// {
+//     int rv;
+    
+//     // cout<<urls.size()<<endl;
+//     bus_socks.clear();
+//     for(int i=0;i<urls.size();i++)
+//     {
+//         nng_socket tmp_sock;
+//         char *url=(char*)urls[i].data();
+//         // cout<<url<<endl;
+//         if((rv = nng_bus0_open(&tmp_sock)) != 0)
+//             fatal("nng_bus_open", rv);
+//         if((rv = nng_listen(tmp_sock, url, NULL, 0)) != 0)
+//             fatal("nng_listen", rv);
+//         cout<<"listen sucess"<<endl;
+//         bus_socks.push_back(tmp_sock);
+//         nng_close(tmp_sock);
+//     }
+//     cout<<bus_socks.size()<<endl;
+// }

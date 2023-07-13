@@ -42,7 +42,7 @@ set(src ${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(include ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set (test ${CMAKE_CURRENT_SOURCE_DIR}/test)
 # 设置文件位置
-
+message("src:${src}")
 add_library(parameter ${src}/parameter.cpp)
 add_library(utils ${src}/utils.cpp)
 # add_library(udp udp.cpp)
@@ -54,7 +54,7 @@ target_include_directories(utils PUBLIC ${include})
 target_include_directories(reqrep PUBLIC ${include})
 target_include_directories(bus PUBLIC ${include})
 
-add_executable(test ${src}/*.cpp)
+add_executable(test ${src}/bus.cpp ${src}/parameter.cpp ${src}/reqrep.cpp ${src}/utils.cpp ${test}/test.cpp)
 
 # 添加头文件搜索路径
 target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

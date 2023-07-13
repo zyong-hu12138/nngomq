@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <functional>
 // #include "udp.h"
 #include "utils.h"
 #include <nng/nng.h>
@@ -61,7 +62,7 @@ class Bus
         void close();
         void loop_start();
         void on_message(char* topic,char* payload);
-        void _recv_thread(void (*func)(char*,char*));
+        void _recv_thread(function <void(char*,char*)> func);
         void _send_thread();
         void recv(void (*func)(char*,char*));
         //void _notify_thread();

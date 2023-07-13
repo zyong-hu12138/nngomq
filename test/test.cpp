@@ -15,11 +15,16 @@ int main()
     REQ req(Target {data(ip),51100},100,100,0);
     char *topic = "hello";
     char *payload = "world";
-    
+    void callback(char *topic,char *payload);
     // rep.loop_start();//rep接收消息
     req._send(topic,payload);//发送信息
-    rep.main_thread();//rep接收消息
-    rep.reply(topic,payload);
+    rep.loop_start(callback);//rep接收消息
+    // rep.reply(topic,payload);
     req._recv();
     return 0;
+}
+void callback(char *topic,char *payload)
+{
+    cout<<"callback"<<endl;
+    printf("topic:%s,payload:%s\n",topic,payload);
 }

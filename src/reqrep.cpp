@@ -105,7 +105,7 @@ void REP::_exit()
 {
     nng_close(rep_sock);
 }
-void REP::main_thread()
+void REP::main_thread(void (*func)(char* ,char *))
 {
     int rv;
     char *buf = NULL;
@@ -122,18 +122,27 @@ void REP::main_thread()
         message msg={topic,payload};
         _queue.push_back(msg);
         printf("REP GET: %s %s\n", topic, payload);
-        if(rv==0)
-            break;
+        if(func!=NULL)
+        {
+            func(topic,payload);
+        }
+        else{
+            cout<<topic<<":"<<payload<<endl;
+        }
+        if((rv = nng_send(rep_sock, buf, strlen(buf)+1, 0)) != 0)
+            fatal("nng_send", rv);
+        nng_free(buf, strlen(buf)+1);
+        
     }
 }
-void REP::loop_start()
+void REP::loop_start(void (*func)(char* ,char *))
 {
-    thread tid(&REP::main_thread,this);
+    thread tid(&REP::main_thread,this,func);
     tid.detach();//接收消息的线程
 }
-void REP::loop_forever()
+void REP::loop_forever(void (*func)(char* ,char *))
 {
-    main_thread();
+    main_thread(func);
 }
 void REP::reply(char *topic,char *payload)
 {
