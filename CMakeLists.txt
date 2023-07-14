@@ -56,6 +56,7 @@ target_include_directories(utils PUBLIC ${include})
 target_include_directories(reqrep PUBLIC ${include})
 target_include_directories(bus PUBLIC ${include})
 target_include_directories(udp PUBLIC ${include})
+
 # 查找并导入 Python 库
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
 
@@ -69,7 +70,8 @@ target_include_directories(test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 # add_library(utils.cpp SHARED utils.cpp)#添加动态库文件
 find_package(nng REQUIRED)
 target_link_libraries(test nng::nng)#添加动态库文件
-target_compile_definitions(test PRIVATE NNG_ELIDE_DEPRECATED)#添加动态库文件
+target_compile_definitions(test PRIVATE NNG_ELIDE_DEPRECATED)#添加动态库文件)
+
 target_link_libraries(test parameter)
 target_link_libraries(test utils)
 # target_link_libraries(test udp)

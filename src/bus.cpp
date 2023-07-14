@@ -5,14 +5,13 @@
 #include <unistd.h>
 #include <functional>
 #define SEPARATOR "^&*;"
-BusMulticast bus_multicast; //负责组播的套接字;
-
+ //负责组播的套接字;
+BusMulticast bus_multicast;
 // vector <nng_socket> bus_socks; //用来监听连接的套接字
 using namespace std;
 
 Bus::Bus(char *ip,int port)
 {
-    
     int rv;
     if((rv = nng_bus0_open(&bus_sock)) != 0)
         fatal("nng_bus_open", rv);
