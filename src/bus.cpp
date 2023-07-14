@@ -1,5 +1,4 @@
 #include "bus.h"
-#include "udp.h"
 #include <any>
 #include <vector>
 #include <iostream>
@@ -11,15 +10,9 @@ BusMulticast bus_multicast; //负责组播的套接字;
 // vector <nng_socket> bus_socks; //用来监听连接的套接字
 using namespace std;
 
-// void fatal(char *func, int rv)
-// {
-//     fprintf(stderr, "%s: %s\n", func, nng_strerror(rv));
-//     exit(1);
-// }
-
 Bus::Bus(char *ip,int port)
 {
-    bus_multicast.loop();
+    
     int rv;
     if((rv = nng_bus0_open(&bus_sock)) != 0)
         fatal("nng_bus_open", rv);
@@ -31,15 +24,7 @@ Bus::Bus(char *ip,int port)
     // cout<<url<<endl;
     if((rv = nng_listen(bus_sock, url, NULL, 0)) != 0)
         fatal("nng_listen", rv);
-    
-    nng_socket tmp_sock;
-    if((rv = nng_bus0_open(&tmp_sock)) != 0)
-        fatal("nng_bus_open", rv);
-    if((rv = nng_dial(tmp_sock, bus_multicast.udp_url, NULL, 0)) != 0)
-        fatal("nng_dial", rv);
-    if((rv = nng_send(tmp_sock, url, strlen(url)+1, 0)) != 0)
-        fatal("nng_send", rv);
-    nng_close(tmp_sock);
+    bus_multicast.loop(url);
     //告诉组播地址加入bus节点
 }
 
@@ -139,7 +124,7 @@ void Bus::_send_thread()
             //     fatal("nng_send", rv);
             for (int i = 0; i < bus_multicast.urllist.size(); i++)
             {
-                char *url = (char *)bus_multicast.urllist[i].data();
+                char *url = (char *)bus_multicast.urllist[i];
                 nng_socket tmp_sock;
                 if ((rv = nng_bus0_open(&tmp_sock)) != 0)
                     fatal("nng_bus_open", rv);
@@ -163,9 +148,9 @@ void Bus::on_message(char* topic,char* payload)
     cout<<"payload:" <<payload<<endl;
 }
 
-void display()
+void Bus::display()
 {
-    cout<<1<<endl;
+    cout<<"display"<<endl;
     for(int i=0;i<bus_multicast.urllist.size();i++)
     {
         cout<<bus_multicast.urllist[i]<<endl;

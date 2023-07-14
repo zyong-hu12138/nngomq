@@ -1,6 +1,6 @@
 #include "reqrep.h"
 #include "utils.h"
-// #include "udp.h"
+#include "udp.h"
 #include <vector>
 #include <thread>
 #include <unistd.h>
@@ -190,8 +190,8 @@ void REP::reply(char *topic,char *payload)
     free(msg);
 }
 
-void fatal(const char *func, int rv)
-{
-    printf("%s: %s\n", func, nng_strerror(rv));
-    exit(1);
-}
+// void fatal(const char *func, int rv)
+// {
+//     printf("%s: %s\n", func, nng_strerror(rv));
+//     exit(1);
+// }

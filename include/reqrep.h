@@ -2,7 +2,7 @@
 #define REQREP_H_
 #include "parameter.h"
 #include "utils.h"
-// #include "udp.h"
+#include "udp.h"
 #include <vector>
 #include <thread>
 #include <unistd.h>
@@ -13,7 +13,7 @@
 using namespace std;
 // extern ReqRepMulticast *udp ;
 //未实现UDP功能
-void fatal(const char *func, int rv);
+// void fatal(const char *func, int rv);
 struct Target
 {
     char *ip;
