@@ -25,6 +25,7 @@ class BusMulticast
     int udp_sock;
     int urllist_size=0;
     sockaddr_in udp_url{};
+    sockaddr_in local_addr{};
     public:
     BusMulticast(){};
     ~BusMulticast() {};
