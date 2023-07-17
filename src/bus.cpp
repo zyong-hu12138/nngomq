@@ -23,7 +23,7 @@ Bus::Bus(char *ip,int port)
     // cout<<url<<endl;
     if((rv = nng_listen(bus_sock, url, NULL, 0)) != 0)
         fatal("nng_listen", rv);
-    bus_multicast.loop(url);
+    bus_multicast.loop(ip,port);
     //告诉组播地址加入bus节点
 }
 
