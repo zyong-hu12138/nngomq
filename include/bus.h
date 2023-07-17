@@ -15,11 +15,12 @@ using namespace std;
 #include <thread>
 #define SEPARATOR "^&*;"
 //bus 通信urls还是必要的，记录已经有的节点dial 的地址，
-extern BusMulticast bus_multicast;
+
 // extern vector <nng_socket> bus_socks; //用来监听连接的套接字
 // void fatal(char *func, int rv);
 class Bus
 {
+    BusMulticast bus_multicast;
     private:
     char *ip;
     int port;

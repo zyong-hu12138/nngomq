@@ -5,13 +5,15 @@
 #include <thread>
 #include <unistd.h>
 #include <errno.h>
-#include <sys/socket.h>>
+#include <sys/socket.h>
 using  namespace std;
 void fatal(const char *func, int rv)
 {
     cout<<func<<" error"<<":"<<strerror(errno)<<endl;
     // exit(1);
+    
 }
+
 
 void BusMulticast::multi_create(char *ip,int port)//正确创建组播组并绑定以及加入组播组
 {
@@ -31,34 +33,38 @@ void BusMulticast::multi_create(char *ip,int port)//正确创建组播组并绑�
 
     //绑定到本地地址和端口
     local_addr.sin_family = AF_INET;
-    // local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    local_addr.sin_addr.s_addr = inet_addr(ip);
+    local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    // local_addr.sin_addr.s_addr = inet_addr(ip);
     local_addr.sin_port = htons(port);
-    if(bind(udp_sock,reinterpret_cast<sockaddr*>(&local_addr),sizeof(local_addr))<0)
+
+    if(bind(udp_sock,reinterpret_cast<sockaddr*>(&udp_url),sizeof(udp_url))<0)
         fatal("bind",errno);
     if(setsockopt(udp_sock,IPPROTO_IP,IP_MULTICAST_IF,reinterpret_cast<char*>(&local_addr), sizeof(local_addr))<0)
         fatal("setsockopt",errno);
     //加入组播组
     ip_mreq multicast_req{};
     multicast_req.imr_multiaddr.s_addr = inet_addr(udp_ip);
-    // multicast_req.imr_interface.s_addr = htonl(INADDR_ANY);
-    multicast_req.imr_interface.s_addr = inet_addr(ip);
-    multicast_req.imr_interface.s_addr = htonl(INADDR_ANY);
-    // local_addr.imr_interface.s_addr = inet_addr(ip);
+    multicast_req.imr_interface.s_addr = htonl(INADDR_ANY);//self_ip
+
     if(setsockopt(udp_sock,IPPROTO_IP,IP_ADD_MEMBERSHIP,reinterpret_cast<char*>(&multicast_req),sizeof(multicast_req))<0)
         fatal("setsockopt",errno);
+    
 }
 
 void BusMulticast::multi_listen()//接收组播数据
 {
+    struct sockaddr_in sender;
+    socklen_t sender_len=sizeof(sender);
+    cout << "multi listen!!!!!!" << endl;
     while(1)
     {
         char buf[1024];
         memset(buf, 0 ,sizeof(buf));
         struct sockaddr_in sender;
         socklen_t len = sizeof(struct sockaddr_in);
+  
 	    // int sender_len=sizeof(sender);
-        int recv_size = recvfrom(udp_sock,buf,sizeof(buf),0,(struct sockaddr*)&sender,&len);
+        int recv_size = recvfrom(udp_sock,buf,sizeof(buf)-1,0,  (struct sockaddr*)&sender,&sender_len);
         if(recv_size == -1)
         {
             cout<<"Failed to receive data."<<endl;
@@ -69,29 +75,60 @@ void BusMulticast::multi_listen()//接收组播数据
             cout<<"Connection closed."<<endl;
             break;
         }
-        else
-        {   
-            cout<<"listen"<<buf<<endl;
-            recv_urllist.push_back(buf);
+        else if(buf!=NULL)
+        {  
+            // if(urllist.size()==0)  urllist.push_back(buf);
+            // if(urllist.size()>0)
+            // {
+            //     auto it = find(urllist.begin(), urllist.end(), buf);
+            //     if(it != urllist.end())
+            //     {
+            //         continue;
+            //     }    
+            //     else if(it == urllist.end())
+            //     {    
+            //         cout<<"url"<<buf<<endl;
+            //         urllist.push_back(buf);
+            //     }
+            // }
+            if(cnt==0) 
+            {
+                urllist[cnt] = (char*)malloc(sizeof(buf));
+                strcpy(urllist[cnt],buf);
+                
+                // cout<<buf<<", "<<cnt<<", "<<urllist[0]<<endl;
+                cnt++;
+            }//初始加入的节点
+            int flag=0;
+            for (int i=0;i<cnt;i++)
+            {
+                // cout << urllist[i] << ": " << buf << endl;
+                if(strcmp(urllist[i],buf)==0)
+                {
+                    flag=1;
+                    break;
+                }
+            }//判断是否已经存在
+            if(flag==0) 
+            {
+                cout<< "new url"<<endl;
+                urllist[cnt] = (char*)malloc(sizeof(buf));
+                strcpy(urllist[cnt],buf);
+                cnt++;
+                // cout<<cnt<<endl;
+            }
         }
     }
 }
 //发送组播数据
 void BusMulticast::multi_send(char *ip,int port)
 {
-    int fd = socket (AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0)
-        fatal("socket",errno);
-    struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = inet_addr(udp_ip);
-    addr.sin_port = htons(udp_port);
-
     char buf[1024];
     while(1)
     {
+        memset(buf, 0 ,sizeof(buf));
         sprintf(buf,"tcp://%s:%d",ip,port);
-        int send_size = sendto(fd,buf,sizeof(buf),0,reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
+        int send_size = sendto(udp_sock,buf,sizeof(buf)-1,0,(struct sockaddr *)&udp_url,sizeof(udp_url));
         if(send_size == -1)
         {
             cout<<"Failed to send data."<<endl;
@@ -104,34 +141,50 @@ void BusMulticast::multi_send(char *ip,int port)
         }
         else
         {
-            sleep(5);
+        usleep(500000);
         }
     }
 }
-void BusMulticast::upgrade()
-{
-   while(1)
-    {
-        if(recv_urllist.size()>0)
-        {
-            char *url=recv_urllist[0];
-            recv_urllist.erase(recv_urllist.begin());
-            auto it = find(urllist.begin(), urllist.end(), url);
-            if(it != urllist.end())
-                continue;
-            else
-                urllist.push_back(url);
-        }
-    }
-}
+// void BusMulticast::upgrade()
+// {   
+//     sleep(1);
+//    while(1)
+//     {
+//         sleep(0.5);
+//         if(urllist.size()==0&&recv_urllist.size()>0)
+//         {   char *url = recv_urllist[0];
+//             urllist.push_back(url);
+//             recv_urllist.erase(recv_urllist.begin());
+//             break;
+//         }
+//         if(recv_urllist.size()>0&&urllist.size()>0)
+//         {
+//             char *url=recv_urllist[0];
+//             cout<<url<<endl;
+//             auto it = find(urllist.begin(), urllist.end(), url);
+//             if(it != urllist.end())
+//             {
+//                 recv_urllist.erase(recv_urllist.begin());
+//                 continue;
+//             }    
+//             else if(it == urllist.end())
+//             {    
+//                 urllist.push_back(url);
+//                 recv_urllist.erase(recv_urllist.begin());
+               
+//             }
+            
+//         };
+//     }
+// }
 
 void BusMulticast::loop(char *ip,int port)
 {
     multi_create(ip,port);
+    // thread tid3(&BusMulticast::upgrade,this);
     thread tid1(&BusMulticast::multi_listen,this);
     thread tid2(&BusMulticast::multi_send,this,ip,port);
-    thread tid3(&BusMulticast::upgrade,this);
+    // tid3.detach();
     tid1.detach();
     tid2.detach();
-    tid3.detach();
 }

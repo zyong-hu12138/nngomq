@@ -5,8 +5,7 @@
 #include <unistd.h>
 #include <functional>
 #define SEPARATOR "^&*;"
- //负责组播的套接字;
-BusMulticast bus_multicast;
+
 // vector <nng_socket> bus_socks; //用来监听连接的套接字
 using namespace std;
 
@@ -121,7 +120,8 @@ void Bus::_send_thread()
             // cout<<buf<<endl;
             // if((rv = nng_send(bus_sock, buf, strlen(buf)+1, 0)) != 0)
             //     fatal("nng_send", rv);
-            for (int i = 0; i < bus_multicast.urllist.size(); i++)
+            // for (int i = 0; i < bus_multicast.urllist.size(); i++)
+            for(int i=0;i<bus_multicast.cnt;i++)
             {
                 char *url = (char *)bus_multicast.urllist[i];
                 nng_socket tmp_sock;
@@ -137,6 +137,7 @@ void Bus::_send_thread()
             // if((rv = nng_send(bus_sock, buf, strlen(buf)+1, 0)) != 0)
             //     fatal("nng_send", rv);
             _queue.erase(_queue.begin());
+            cout<<"send sucess"<<_queue.size()<<endl;
             nng_free(buf, strlen(buf)+1);
         }
     }
@@ -150,7 +151,8 @@ void Bus::on_message(char* topic,char* payload)
 void Bus::display()
 {
     cout<<"display"<<endl;
-    for(int i=0;i<bus_multicast.urllist.size();i++)
+    cout<<bus_multicast.cnt<<endl;
+    for(int i=0;i<bus_multicast.cnt;i++)
     {
         cout<<bus_multicast.urllist[i]<<endl;
     }
