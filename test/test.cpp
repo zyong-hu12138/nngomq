@@ -14,9 +14,12 @@ using namespace std;
 int main()
 {   
     Py_Initialize();
+    
+    _init_();
     string ip="127.0.0.1";
-    REP rep(Target {data(ip),51100});
-    REQ req(Target {data(ip),51100},100,100,true);
+    
+    REP rep(Addrlib.test);
+    REQ req(Addrlib.test,100,100,true);
     char *topic = "hello";
     char *payload = "world";
     void callback(char *topic,char *payload);

@@ -31,8 +31,9 @@ class REQ
         int _send_count;
         vector<message> _queue;
     public:
-        REQ(Target target,int send_timeout,int recv_timeout ,bool is_async )
+        REQ(Address nameaddr,int send_timeout,int recv_timeout ,bool is_async )
         {
+            target = {nameaddr.ip,nameaddr.port};
             int rv;
             if((rv = nng_req0_open(&req_sock)) != 0)
                 fatal("nng_req0_open", rv);//创建socket
@@ -79,9 +80,9 @@ class REP  //响应请求
         ReqRepMulticast udp;
         vector<message> _queue;
     public:
-        REP(Target addr,Address nameaddr)
+        REP(Address nameaddr)
         {
-            addr=addr;
+            addr={nameaddr.ip,nameaddr.port};
             int rv;
             if((rv = nng_rep0_open(&rep_sock)) != 0)
                 fatal("nng_rep0_open", rv);//创建socket

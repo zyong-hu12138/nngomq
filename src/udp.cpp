@@ -15,9 +15,9 @@ void fatal(const char *func, int rv)
 }
 
 
-void BusMulticast::multi_create(Address name)//正确创建组播组并绑定以及加入组播组
+void BusMulticast::multi_create(char *ip,int port)//正确创建组播组并绑定以及加入组播组
 {
-    int port = name.port;
+    
     // 创建套接字
     udp_sock = socket(AF_INET , SOCK_DGRAM , 0);
     if(udp_sock < 0)
@@ -190,8 +190,9 @@ void BusMulticast::loop(char *ip,int port)
     tid2.detach();
 }
 
-void RepReqMulticast::multicreate(Address name)
+void ReqRepMulticast::multi_create(Address name)
 {
+    int port = name.port;
     // 创建套接字
     udp_sock = socket(AF_INET , SOCK_DGRAM , 0);
     if(udp_sock < 0)
@@ -225,7 +226,7 @@ void RepReqMulticast::multicreate(Address name)
         fatal("setsockopt",errno);
     
 }
-void RepReqMulticast::multi_listen()
+void ReqRepMulticast::multi_listen()
 {
     struct sockaddr_in sender;
     socklen_t sender_len=sizeof(sender);
@@ -299,7 +300,7 @@ void ReqRepMulticast::multi_send(Address name)
 }
 void ReqRepMulticast::loop(Address name)
 {
-    multicreate(name);
+    multi_create(name);
     thread tid1(&ReqRepMulticast::multi_listen,this);
     thread tid2(&ReqRepMulticast::multi_send,this,name);
     tid1.detach();

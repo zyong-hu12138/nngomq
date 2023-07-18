@@ -6,77 +6,55 @@
 #include <iostream>
 #include <unistd.h>
 #include <vector>
+#include <map>
 using namespace std;
 #define SEPARATOR "^&*;"
 char *SELF_IP;
 char *IMX6Q_IP;
 char *NANO_IP;
-
-class Addrlib
+Addresslib Addrlib;
+map<char*,Address> mymap; 
+void _init_()
 {
-    Address VISION={"VISION", NANO_IP, 51010, NULL};
-    Address RADAR={"RADAR", NANO_IP, 51011, NULL};
-    Address NANO_CAM={"NANO_COMM", NANO_IP, 51012, NULL};
-    Address NANO_LOC={"NANO_LOC", NANO_IP, 51013, NULL};
-    Address NANO_LOG={"NANO_LOG", NANO_IP, 51014, NULL};
-    Address APP_COMM={"APP_COMM", "192.168.3.113", 51000, NULL};
-    Address MAIN={"MAIN",IMX6Q_IP,51000,"ipc:///tmp/main.ipc"};
-    Address COMMUNICATION={"COMMUNICATION", IMX6Q_IP, 51001, "ipc:///tmp/comm.ipc"};
-    Address PLAN={"PLAN", IMX6Q_IP, 51002, "ipc:///tmp/plan.ipc"};
-    Address DECISION={"DECISION", IMX6Q_IP, 51003, "ipc:///tmp/decision.ipc"};
-    Address CONTROL={"CONTROL", IMX6Q_IP, 51004, "ipc:///tmp/control.ipc"};
-    Address LOG={"LOG", IMX6Q_IP, 51005, "ipc:///tmp/log.ipc"};
-    Address LOCATION={"LOCATION", IMX6Q_IP, 51006, "ipc:///tmp/location.ipc"};
-
-};
-
+    mymap["VISION"]=Addrlib.VISION;
+    mymap["RADAR"]=Addrlib.RADAR;
+    mymap["NANO_CAM"]=Addrlib.NANO_CAM;
+    mymap["NANO_LOC"]=Addrlib.NANO_LOC;
+    mymap["NANO_LOG"]=Addrlib.NANO_LOG;
+    mymap["APP_COMM"]=Addrlib.APP_COMM;
+    mymap["MAIN"]=Addrlib.MAIN;
+    mymap["COMMUNICATION"]=Addrlib.COMMUNICATION;
+    mymap["PLAN"]=Addrlib.PLAN;
+    mymap["DECISION"]=Addrlib.DECISION;
+    mymap["CONTROL"]=Addrlib.CONTROL;
+    mymap["LOG"]=Addrlib.LOG;
+    mymap["LOCATION"]=Addrlib.LOCATION;
+    mymap["test"]=Addrlib.test;
+    IP_SET();
+}
 char* get_name_ip(char* name)
 {
-    for(int i=0;i<Addrlib.size();i++)
-    {
-        if(strcmp(name, Addrlib[i].name) == 0)
-        {
-            return (char*)Addrlib[i].ip;
-        }
-    }
-    return NULL;
+    return mymap[name].ip;
 }
-char* get_name_port(char* name)
+int get_name_port(char* name)
 {
-    for(int i=0;i<Addrlib.size();i++)
-    {
-        if(strcmp(name, Addrlib[i].name) == 0)
-        {
-            return (char*)Addrlib[i].port;
-        }
-    }
-    return NULL;
+    return mymap[name].port;
 }
 void set_name_ip(char* name, char* ip)
 {
-    for(int i=0;i<Addrlib.size();i++)
-    {
-        if(strcmp(name, Addrlib[i].name) == 0)
-        {
-            Addrlib[i].ip = ip;
-        }
-    }
+    mymap[name].ip = ip;
 }
 void set_name_port(char* name, int port)
 {
-    for(int i=0;i<Addrlib.size();i++)
-    {
-        if(strcmp(name, Addrlib[i].name) == 0)
-        {
-            Addrlib[i].port = port;
-        }
-    }
+    mymap[name].port = port;
 }
 int IP_SET()
 {
     int status = 0;
+    char *ip=(char*)malloc(40*sizeof(char));
     while(1){
-        status = get_local_ip(SELF_IP);
+        status = get_local_ip(ip);
+        cout<<1<<endl;
         if(SELF_IP == NULL) sleep(1);
         else break;
     }
