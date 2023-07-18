@@ -1,3 +1,4 @@
+ 
 #include "parameter.h"
 #include "utils.h"
 #include <stdio.h>
@@ -12,6 +13,7 @@ using namespace std;
 char *SELF_IP=(char*)malloc(40*sizeof(char));
 char *IMX6Q_IP;
 char *NANO_IP;
+char *error =(char*)malloc (100*sizeof(char));
 Addresslib Addrlib;
 map<string,Address> mymap; 
 void _init_()
@@ -53,9 +55,11 @@ int IP_SET()
     int status = 0;
     while(1){
         status = get_local_ip(SELF_IP);
-        cout<<SELF_IP<<endl;
-        if(SELF_IP == NULL) sleep(1);
-        else break;
+        if(SELF_IP == NULL) 
+            {error = "can't get local ip"; 
+            continue;};
+        if(SELF_IP!=NULL)
+            break;
     }
     if(status == -1){
         printf("get local ip error\n");

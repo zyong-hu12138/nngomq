@@ -6,12 +6,12 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/socket.h>
+#include <chrono>
 using  namespace std;
 void fatal(const char *func, int rv)
 {
-    cout<<func<<" error"<<":"<<strerror(errno)<<endl;
-    // exit(1);
-    
+    sprintf(error,"%s error:%s",func,strerror(errno));
+    cin.ignore();
 }
 
 
@@ -255,20 +255,17 @@ void ReqRepMulticast::multi_listen()
             if(sender.sin_family == AF_INET)
             {
                 ip = inet_ntoa(sender.sin_addr);
-                cout << "ip: " << ip << endl;
 
             }
             if(sender.sin_family == AF_INET6)
             {
                 inet_ntop(AF_INET6, &sender.sin_addr, ip, sizeof(ip));
-                cout << "ip6: " << ip << endl;
             }
             if(strcmp(ip,get_name_ip(buf)) == 0)
                 continue;
             else if(strcmp(ip,get_name_ip(buf)) != 0)
             {
                 set_name_ip(buf,ip);
-                cout << "ip: " << ip << endl;
             }//更新addresslib中的ip值
         }
     }

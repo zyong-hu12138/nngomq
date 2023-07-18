@@ -4,6 +4,7 @@
 #include <vector>
 #include <thread>
 #include <unistd.h>
+#include "pickle.h"
 #define SEPARATOR "^&*;"
 using namespace std;
 // ReqRepMulticast *udp;
@@ -31,11 +32,8 @@ void REQ::_send(char *topic,char *payload)
     char *str = (char *)malloc(strlen(topic) + strlen(payload) + strlen(SEPARATOR) + 1);
     sprintf(str, "%s%s%s", topic, SEPARATOR, payload);
     PyObject *pyBytes = congverStringToBytes(str);
-    // if((rv = nng_send(req_sock, msg, strlen(msg) + 1, 0)) != 0)
-    //     fatal("nng_send", rv);
     PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
-    
-    if((rv = nng_send(req_sock, buf, sz, 0)) != 0)
+    if((rv = nng_send(req_sock, buf, sz, 0)) != 0) //此处超时
         fatal("nng_send", rv);
     free(str);
 }
@@ -48,17 +46,15 @@ void REQ::_send_thread()
             message msg = _queue[0];
             _queue.erase(_queue.begin());
             _send(msg.topic,msg.payload);
-            
             int rv;
             char *buf = NULL;
             size_t sz;
-            if((rv = nng_recv(req_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
+            if((rv = nng_recv(req_sock,&buf, &sz, NNG_FLAG_ALLOC)) != 0)
                 fatal("nng_recv", rv);
             getPyObjectAsString(buf,sz,buf);//反序列化后的结果
             char *topic = strtok(buf, SEPARATOR);
             char *payload = strtok(NULL, SEPARATOR);
-            cout<<"req _recv"<<endl;
-            cout<<topic<<payload<<endl;
+            cout<<"req _recv"<<topic<<payload<<endl;
         }
     }
 }
@@ -71,7 +67,7 @@ message REQ::send(char *topic,char *payload)
         return msg;
     }
     else
-    {   
+    {  
         _send(topic,payload);
         char *buf = NULL;
         size_t sz;
@@ -158,10 +154,7 @@ void REP::main_thread(void (*func)(char* ,char *))
         cout<<"rep send"<<endl;
         if((rv = nng_send(rep_sock, buf,sz, 0)) != 0)
             fatal("nng_send", rv);
-        // nng_free(buf,strlen(buf)+1);
-        }
-        
-        
+    }
     }
 }
 void REP::loop_start(void (*func)(char* ,char *))
@@ -187,9 +180,8 @@ void REP::reply(char *topic,char *payload)
         sleep(0.01);
     free(msg);
 }
-
-// void fatal(const char *func, int rv)
-// {
-//     printf("%s: %s\n", func, nng_strerror(rv));
-//     exit(1);
-// }
+void req(Address name,char *topic,char *payload,int send_timeout,int recv_timeout ,bool is_async)
+{
+    REQ req_node(name,3000,3000,true);
+    req_node.send(topic,payload);
+}

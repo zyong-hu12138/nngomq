@@ -10,6 +10,7 @@
 #include <nng/nng.h>
 #include <nng/protocol/bus0/bus.h>
 #include <any>
+#include "pickle.h"
 using namespace std;
 #include <vector>
 #include <thread>
@@ -36,10 +37,6 @@ class Bus
             _queue.clear();
             topics.clear();
         }
-        // void dial(char *ip,int port);//每个bus节点dial到一个端口，该端口被所有节点监听
-        // void dial();
-        // void listen(char *ip,int port);
-        // void listen();
         void __enter__();
         void __exit__();
         void publish(char* topic,char* payload);//发送信息到总线，先传入队列中

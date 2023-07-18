@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include "utils.h"
+#include "parameter.h"
 using namespace std;
 
 int  get_local_ip(char *ip){
@@ -23,7 +24,7 @@ int  get_local_ip(char *ip){
  
 	if((sockfd = socket(AF_INET, SOCK_DGRAM,0))<0)
 	{
-	    printf("socket error\n");
+		error="socket can't create";
 		return -1;
 	}
 	ioctl(sockfd,SIOCGIFCONF, &ifc);

@@ -20,7 +20,7 @@ using namespace std;
 extern char *SELF_IP;//d定义全局变量SELF_IP
 extern char *IMX6Q_IP;//定义全局变量IMX6Q_IP
 extern char *NANO_IP;//定义全局变量PC_IP
-
+extern char* error;
 int IP_SET();
 
 typedef struct{

@@ -13,14 +13,12 @@ using namespace std;
 #pragma warning
 int main()
 {   
-    Py_Initialize();
-    _init_();
-    char *old_ip=get_name_ip("test");
+    string ip="127.0.0.1";
+    
     REP rep(Addrlib.test);
     REQ req(Addrlib.test,100,100,true);
     char *topic = "hello";
     char *payload = "world";
-    char *ip=get_name_ip("test");
     void callback(char *topic,char *payload);
     rep.loop_start(callback);//rep接收消息
     req.send(topic,payload);//发送信息

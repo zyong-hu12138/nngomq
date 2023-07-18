@@ -44,7 +44,6 @@ class REQ
                 fatal("nng_setopt_ms", rv);
             char url[20];
             sprintf(url, "tcp://%s:%d", target.ip,target.port);
-            cout<<"req::"<<url<<endl;
             if((rv = nng_dial(req_sock,url, NULL, 0)) != 0)
                 fatal("nng_dial", rv);//连接到指定的URL
             this->is_async = is_async;
@@ -54,7 +53,8 @@ class REQ
                 thread tid(&REQ::_send_thread,this);
                 tid.detach();
             }
-            udp_node.listen_loop(nameaddr);
+
+            // udp_node.listen_loop(self_address);
         }
         ~REQ()
         {
@@ -101,13 +101,6 @@ class REP  //响应请求
                 printf("listen to port %d\n",port);
                 // break;
             }
-                // else if (rv !=0)
-                // {    
-                //     printf(" port %d In Use\n",port);
-                //     sleep(0.1);
-                //     break;
-                // }
-            // }
             udp.loop(nameaddr);  //服务器不断发送消息，告知组播组中自己的ip变化
         }
         ~REP()
@@ -124,5 +117,5 @@ class REP  //响应请求
         void loop_forever(void (*func)(char *,char *));
         void reply(char *topic,char *payload);
 };
-
+void req(Address name,char *topic,char *payload,int send_timeout = 1000,int recv_timeout = 1000 ,bool is_async = true);
 #endif
