@@ -34,6 +34,7 @@ void REQ::_send(char *topic,char *payload)
     // if((rv = nng_send(req_sock, msg, strlen(msg) + 1, 0)) != 0)
     //     fatal("nng_send", rv);
     PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
+    
     if((rv = nng_send(req_sock, buf, sz, 0)) != 0)
         fatal("nng_send", rv);
     free(str);
@@ -94,7 +95,6 @@ void REQ::_recv()
     {
         char *buf = NULL;
         size_t sz;
-        cout<<2<<endl;
         if((rv = nng_recv(req_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
             fatal("nng_recv", rv);
         
@@ -131,8 +131,6 @@ void REP::main_thread(void (*func)(char* ,char *))
     int rv;
     char *buf = NULL;
     size_t sz;
-    // cout<<2<<endl;
-    sleep(0.01);
     while(1)
     {
         if((rv = nng_recv(rep_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)

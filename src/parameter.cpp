@@ -9,52 +9,51 @@
 #include <map>
 using namespace std;
 #define SEPARATOR "^&*;"
-char *SELF_IP;
+char *SELF_IP=(char*)malloc(40*sizeof(char));
 char *IMX6Q_IP;
 char *NANO_IP;
 Addresslib Addrlib;
-map<char*,Address> mymap; 
+map<string,Address> mymap; 
 void _init_()
 {
-    mymap["VISION"]=Addrlib.VISION;
-    mymap["RADAR"]=Addrlib.RADAR;
-    mymap["NANO_CAM"]=Addrlib.NANO_CAM;
-    mymap["NANO_LOC"]=Addrlib.NANO_LOC;
-    mymap["NANO_LOG"]=Addrlib.NANO_LOG;
-    mymap["APP_COMM"]=Addrlib.APP_COMM;
-    mymap["MAIN"]=Addrlib.MAIN;
-    mymap["COMMUNICATION"]=Addrlib.COMMUNICATION;
-    mymap["PLAN"]=Addrlib.PLAN;
-    mymap["DECISION"]=Addrlib.DECISION;
-    mymap["CONTROL"]=Addrlib.CONTROL;
-    mymap["LOG"]=Addrlib.LOG;
-    mymap["LOCATION"]=Addrlib.LOCATION;
-    mymap["test"]=Addrlib.test;
+    mymap.insert(make_pair("VISION",Addrlib.VISION));//插入元素
+    mymap.insert(make_pair("RADAR",Addrlib.RADAR));
+    mymap.insert(make_pair("NANO_CAM",Addrlib.NANO_CAM));
+    mymap.insert(make_pair("NANO_LOC",Addrlib.NANO_LOC));
+    mymap.insert(make_pair("NANO_LOG",Addrlib.NANO_LOG));
+    mymap.insert(make_pair("APP_COMM",Addrlib.APP_COMM));
+    mymap.insert(make_pair("MAIN",Addrlib.MAIN));
+    mymap.insert(make_pair("COMMUNICATION",Addrlib.COMMUNICATION));
+    mymap.insert(make_pair("PLAN",Addrlib.PLAN));
+    mymap.insert(make_pair("DECISION",Addrlib.DECISION));
+    mymap.insert(make_pair("CONTROL",Addrlib.CONTROL));
+    mymap.insert(make_pair("LOG",Addrlib.LOG));
+    mymap.insert(make_pair("LOCATION",Addrlib.LOCATION));
+    mymap.insert(make_pair("test",Addrlib.test));
     IP_SET();
 }
-char* get_name_ip(char* name)
+char* get_name_ip(string name)
 {
     return mymap[name].ip;
 }
-int get_name_port(char* name)
+int get_name_port(string name)
 {
     return mymap[name].port;
 }
-void set_name_ip(char* name, char* ip)
+void set_name_ip(string name, char* ip)
 {
     mymap[name].ip = ip;
 }
-void set_name_port(char* name, int port)
+void set_name_port(string name, int port)
 {
     mymap[name].port = port;
 }
 int IP_SET()
 {
     int status = 0;
-    char *ip=(char*)malloc(40*sizeof(char));
     while(1){
-        status = get_local_ip(ip);
-        cout<<1<<endl;
+        status = get_local_ip(SELF_IP);
+        cout<<SELF_IP<<endl;
         if(SELF_IP == NULL) sleep(1);
         else break;
     }

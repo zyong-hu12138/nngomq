@@ -53,5 +53,6 @@ class ReqRepMulticast
     void multi_listen();//监听组播组
     void multi_send(Address name);//组播信息
     void loop(Address name);//创建线程，循环组播
+    void listen_loop(Address name);//创建线程，循环听
 };
 #endif

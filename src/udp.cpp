@@ -230,7 +230,6 @@ void ReqRepMulticast::multi_listen()
 {
     struct sockaddr_in sender;
     socklen_t sender_len=sizeof(sender);
-    cout << "multi listen!!!!!!" << endl;
     char *ip;
     while(1)
     {
@@ -257,6 +256,7 @@ void ReqRepMulticast::multi_listen()
             {
                 ip = inet_ntoa(sender.sin_addr);
                 cout << "ip: " << ip << endl;
+
             }
             if(sender.sin_family == AF_INET6)
             {
@@ -305,4 +305,10 @@ void ReqRepMulticast::loop(Address name)
     thread tid2(&ReqRepMulticast::multi_send,this,name);
     tid1.detach();
     tid2.detach();
+}
+void ReqRepMulticast::listen_loop(Address name)
+{
+    multi_create(name);
+    thread tid1(&ReqRepMulticast::multi_listen,this);
+    tid1.detach();
 }

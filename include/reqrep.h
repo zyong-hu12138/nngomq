@@ -30,6 +30,7 @@ class REQ
         char *name;
         int _send_count;
         vector<message> _queue;
+        ReqRepMulticast udp_node;
     public:
         REQ(Address nameaddr,int send_timeout,int recv_timeout ,bool is_async )
         {
@@ -53,6 +54,7 @@ class REQ
                 thread tid(&REQ::_send_thread,this);
                 tid.detach();
             }
+            udp_node.listen_loop(nameaddr);
         }
         ~REQ()
         {
@@ -106,7 +108,7 @@ class REP  //响应请求
                 //     break;
                 // }
             // }
-            udp.loop(nameaddr);
+            udp.loop(nameaddr);  //服务器不断发送消息，告知组播组中自己的ip变化
         }
         ~REP()
         {
@@ -121,7 +123,6 @@ class REP  //响应请求
         void loop_start(void(*func)(char *,char *));
         void loop_forever(void (*func)(char *,char *));
         void reply(char *topic,char *payload);
-        
 };
 
 #endif

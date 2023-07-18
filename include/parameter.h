@@ -47,15 +47,15 @@ class Addresslib
     Address CONTROL={"CONTROL", IMX6Q_IP, 51004, "ipc:///tmp/control.ipc"};
     Address LOG={"LOG", IMX6Q_IP, 51005, "ipc:///tmp/log.ipc"};
     Address LOCATION={"LOCATION", IMX6Q_IP, 51006, "ipc:///tmp/location.ipc"};
-    Address test={"test","127.0.0.1",51000,"ipc:///tmp/test.ipc"};
+    Address test={"test",SELF_IP,51000,"ipc:///tmp/test.ipc"};
 };
 extern Addresslib Addrlib;
-extern map<char*,Address> mymap;
+extern map<string,Address> mymap;
 
 void _init_();
-extern char *get_name_ip(char* name);
-extern int get_name_port(char* name);
-extern void set_name_ip(char* name, char* ip);
-extern void set_name_port(char* name, int  port);
+extern char *get_name_ip(string name);
+extern int get_name_port(string name);
+extern void set_name_ip(string name, char* ip);
+extern void set_name_port(string name, int  port);
 
 #endif
