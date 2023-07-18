@@ -14,8 +14,8 @@ Bus::Bus(char *ip,int port)
     int rv;
     if((rv = nng_bus0_open(&bus_sock)) != 0)
         fatal("nng_bus_open", rv);
-    if((rv = nng_socket_set_ms(bus_sock, NNG_OPT_RECVTIMEO, 10000)) != 0)
-        fatal("nng_socket_set_ms", rv);
+    // if((rv = nng_socket_set_ms(bus_sock, NNG_OPT_RECVTIMEO, 10000)) != 0)
+    //     fatal("nng_socket_set_ms", rv);
     char url[20];
     sprintf(url, "tcp://%s:%d",ip,port);
     // urls.push_back(url);
@@ -53,19 +53,6 @@ void Bus::close()
     _queue.clear();
     topics.clear();
 }
-void Bus::loop_start()
-{
-    // thread tid4(&Bus::listen,this);
-    // thread tid1(&Bus::_send_thread,this);
-    // thread tid2(&Bus::_recv_thread,this);
-//    thread tid3(&Bus::_notify_thread,this);
-    // tid1.detach();
-    // tid2.detach();
-    // tid3.detach();
-    // tid4.detach();
-    _send_thread();
-    // _recv_thread();
-}
 void Bus::recv(void (*func)(char*,char*))
 {
     function<void(char* ,char*)> funcWrapper = func;
@@ -81,11 +68,11 @@ void Bus::_recv_thread(function <void(char*,char*)> func)
     {    
         nng_socket tmp_sock = bus_sock; 
         if((rv = nng_recv(tmp_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
-            // cout<<"recv error"<<endl;
             fatal("nng_recv", rv);
-        char *topic = strtok(buf, SEPARATOR);
+        if(rv==0)
+        {
+            char *topic = strtok(buf, SEPARATOR);
         char *payload = strtok(NULL, SEPARATOR);
-        // cout<<topic<<payload<<endl;
         for(int i=0;i<topics.size();i++)
         {
             char *t=(char*)topics[i].data();
@@ -98,8 +85,8 @@ void Bus::_recv_thread(function <void(char*,char*)> func)
                 else{
                     on_message(topic,payload);
                 }
-                
             }
+        }
         }
     }
 }
@@ -116,13 +103,9 @@ void Bus::_send_thread()
             char *payload=msg.payload;
             char *buf = new char[strlen(topic) + strlen(SEPARATOR) + strlen(payload) + 1];
             sprintf(buf, "%s%s%s", topic, SEPARATOR, payload);
-            // cout<<"buf"<<endl;
-            // cout<<buf<<endl;
-            // if((rv = nng_send(bus_sock, buf, strlen(buf)+1, 0)) != 0)
-            //     fatal("nng_send", rv);
-            // for (int i = 0; i < bus_multicast.urllist.size(); i++)
             for(int i=0;i<bus_multicast.cnt;i++)
             {
+                cout<<"send!!!!"<<endl;
                 char *url = (char *)bus_multicast.urllist[i];
                 nng_socket tmp_sock;
                 if ((rv = nng_bus0_open(&tmp_sock)) != 0)
@@ -133,11 +116,7 @@ void Bus::_send_thread()
                     fatal("nng_send", rv);
                 nng_close(tmp_sock);
             }
-            // sleep(0.01);
-            // if((rv = nng_send(bus_sock, buf, strlen(buf)+1, 0)) != 0)
-            //     fatal("nng_send", rv);
             _queue.erase(_queue.begin());
-            cout<<"send sucess"<<_queue.size()<<endl;
             nng_free(buf, strlen(buf)+1);
         }
     }

@@ -76,9 +76,10 @@ class REP  //响应请求
         char *name;
         int _send_count;
         int port;
+        ReqRepMulticast udp;
         vector<message> _queue;
     public:
-        REP(Target addr)
+        REP(Target addr,Address nameaddr)
         {
             addr=addr;
             int rv;
@@ -104,6 +105,7 @@ class REP  //响应请求
                 //     break;
                 // }
             // }
+            udp.loop(nameaddr);
         }
         ~REP()
         {

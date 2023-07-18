@@ -15,8 +15,9 @@ void fatal(const char *func, int rv)
 }
 
 
-void BusMulticast::multi_create(char *ip,int port)//正确创建组播组并绑定以及加入组播组
+void BusMulticast::multi_create(Address name)//正确创建组播组并绑定以及加入组播组
 {
+    int port = name.port;
     // 创建套接字
     udp_sock = socket(AF_INET , SOCK_DGRAM , 0);
     if(udp_sock < 0)
@@ -185,6 +186,122 @@ void BusMulticast::loop(char *ip,int port)
     thread tid1(&BusMulticast::multi_listen,this);
     thread tid2(&BusMulticast::multi_send,this,ip,port);
     // tid3.detach();
+    tid1.detach();
+    tid2.detach();
+}
+
+void RepReqMulticast::multicreate(Address name)
+{
+    // 创建套接字
+    udp_sock = socket(AF_INET , SOCK_DGRAM , 0);
+    if(udp_sock < 0)
+        fatal("socket",errno);
+    //设置套接字选项，允许重用本地地址和端口
+    int reuse = 1;
+    if(setsockopt(udp_sock,SOL_SOCKET,SO_REUSEADDR,&reuse,sizeof(reuse))<0)
+        fatal("setsockopt",errno);
+
+    //设置组播地址和端口
+    udp_url.sin_family = AF_INET;
+    udp_url.sin_addr.s_addr = inet_addr(udp_ip);
+    udp_url.sin_port = htons(udp_port);
+
+    //绑定到本地地址和端口
+    local_addr.sin_family = AF_INET;
+    local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+    // local_addr.sin_addr.s_addr = inet_addr(ip);
+    local_addr.sin_port = htons(port);
+
+    if(bind(udp_sock,reinterpret_cast<sockaddr*>(&udp_url),sizeof(udp_url))<0)
+        fatal("bind",errno);
+    if(setsockopt(udp_sock,IPPROTO_IP,IP_MULTICAST_IF,reinterpret_cast<char*>(&local_addr), sizeof(local_addr))<0)
+        fatal("setsockopt",errno);
+    //加入组播组
+    ip_mreq multicast_req{};
+    multicast_req.imr_multiaddr.s_addr = inet_addr(udp_ip);
+    multicast_req.imr_interface.s_addr = htonl(INADDR_ANY);//self_ip
+
+    if(setsockopt(udp_sock,IPPROTO_IP,IP_ADD_MEMBERSHIP,reinterpret_cast<char*>(&multicast_req),sizeof(multicast_req))<0)
+        fatal("setsockopt",errno);
+    
+}
+void RepReqMulticast::multi_listen()
+{
+    struct sockaddr_in sender;
+    socklen_t sender_len=sizeof(sender);
+    cout << "multi listen!!!!!!" << endl;
+    char *ip;
+    while(1)
+    {
+        char buf[1024];
+        memset(buf, 0 ,sizeof(buf));
+        struct sockaddr_in sender;
+        socklen_t len = sizeof(struct sockaddr_in);
+  
+        // int sender_len=sizeof(sender);
+        int recv_size = recvfrom(udp_sock,buf,sizeof(buf)-1,0,  (struct sockaddr*)&sender,&sender_len);
+        if(recv_size == -1)
+        {
+            cout<<"Failed to receive data."<<endl;
+            break;
+        }
+        else if(recv_size == 0)
+        {
+            cout<<"Connection closed."<<endl;
+            break;
+        }
+        else if(buf!=NULL)
+        {  
+            if(sender.sin_family == AF_INET)
+            {
+                ip = inet_ntoa(sender.sin_addr);
+                cout << "ip: " << ip << endl;
+            }
+            if(sender.sin_family == AF_INET6)
+            {
+                inet_ntop(AF_INET6, &sender.sin_addr, ip, sizeof(ip));
+                cout << "ip6: " << ip << endl;
+            }
+            if(strcmp(ip,get_name_ip(buf)) == 0)
+                continue;
+            else if(strcmp(ip,get_name_ip(buf)) != 0)
+            {
+                set_name_ip(buf,ip);
+                cout << "ip: " << ip << endl;
+            }//更新addresslib中的ip值
+        }
+    }
+}
+
+void ReqRepMulticast::multi_send(Address name)
+{
+    char buf[1024];
+    while(1)
+    {
+        memset(buf, 0 ,sizeof(buf));
+        strcpy(buf,name.name);
+        int send_size = sendto(udp_sock,buf,sizeof(buf)-1,0,(struct sockaddr *)&udp_url,sizeof(udp_url));
+        if(send_size == -1)
+        {
+            cout<<"Failed to send data."<<endl;
+            break;
+        }
+        else if(send_size == 0)
+        {
+            cout<<"Connection closed."<<endl;
+            break;
+        }
+        else
+        {
+        usleep(500000);
+        }
+    }
+}
+void ReqRepMulticast::loop(Address name)
+{
+    multicreate(name);
+    thread tid1(&ReqRepMulticast::multi_listen,this);
+    thread tid2(&ReqRepMulticast::multi_send,this,name);
     tid1.detach();
     tid2.detach();
 }

@@ -18,8 +18,8 @@ class BusMulticast
 {
     public:
     // char *udp_url="tcp://239.100.0.2:52000";
-    char *udp_ip = "224.0.0.1";
-    int udp_port = 50001;
+    char *udp_ip = "239.100.0.2";
+    int udp_port = 52000;
     // vector <string> urllist;
     // vector <string> recv_urllist;
     char* urllist[100];
@@ -39,4 +39,19 @@ class BusMulticast
     void loop(char *ip,int port);//创建线程，循环组播
 };
 
+class ReqRepMulticast
+{
+    char *udp_ip = "239.100.0.1";
+    int udp_port = 52000;
+    int udp_sock;
+    sockaddr_in udp_url{};
+    sockaddr_in local_addr{};
+    public:
+    ReqRepMulticast(){};
+    ~ReqRepMulticast() {};
+    void multi_create(Address name);//正确创建组播组并绑定以及加入组播组
+    void multi_listen();//监听组播组
+    void multi_send(Address name);//组播信息
+    void loop(Address name);//创建线程，循环组播
+}
 #endif

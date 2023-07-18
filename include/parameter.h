@@ -27,7 +27,7 @@ typedef struct{
     char* ip;
     int  port;
     char* ipc; 
-}Address;
+} Address;
 
 // extern const Address VISION ;
 // extern const Address RADAR ;
@@ -42,7 +42,7 @@ typedef struct{
 // extern const Address CONTROL  ;
 // extern const Address LOG  ;
 // extern const Address LOCATION ;
-extern vector<Address> Addrlib;
+extern class Addrelib;
 extern char *get_name_ip(char* name);
 extern char *get_name_port(char* name);
 extern void set_name_ip(char* name, char* ip);
