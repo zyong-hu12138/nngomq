@@ -7,6 +7,7 @@
 #include "pickle.h"
 #define SEPARATOR "^&*;"
 using namespace std;
+
 // ReqRepMulticast *udp;
 //REQ类中函数的实现
 void REQ::_enter()
@@ -44,7 +45,7 @@ void REQ::_send_thread()
         if(_queue.size() > 0)
         {
             message msg = _queue[0];
-            _queue.erase(_queue.begin());
+            cout<<msg.topic<<msg.payload<<endl;
             _send(msg.topic,msg.payload);
             int rv;
             char *buf = NULL;
@@ -55,6 +56,7 @@ void REQ::_send_thread()
             char *topic = strtok(buf, SEPARATOR);
             char *payload = strtok(NULL, SEPARATOR);
             cout<<"req _recv"<<topic<<payload<<endl;
+            _queue.erase(_queue.begin());
         }
     }
 }
@@ -62,6 +64,7 @@ message REQ::send(char *topic,char *payload)
 {
     if(is_async)
     { 
+        
         message msg={topic,payload};
         _queue.push_back(msg);
         return msg;
@@ -180,8 +183,43 @@ void REP::reply(char *topic,char *payload)
         sleep(0.01);
     free(msg);
 }
+int REQ::find_port()
+{
+    return self_address.port;
+}
+char* REQ::find_ip()
+{
+    return self_address.ip;
+}
+vector <REQ> reqlist;
+
+
 void req(Address name,char *topic,char *payload,int send_timeout,int recv_timeout ,bool is_async)
 {
-    REQ req_node(name,3000,3000,true);
-    req_node.send(topic,payload);
+    int name_port = name.port;
+    char *name_ip = name.ip;
+    if(reqlist.size() == 0)
+    {
+        REQ req(name,send_timeout,recv_timeout,is_async);
+        reqlist.push_back(req);
+        reqlist[0].send(topic,payload);
+    }
+    else
+    {
+        for(int i=0;i<reqlist.size();i++)
+        {
+            if(reqlist[i].find_port() == name_port && strcmp(reqlist[i].find_ip(),name_ip) == 0)
+            {
+                reqlist[i].send(topic,payload);
+                break;
+            }
+            else if(i == reqlist.size() - 1)
+            {
+                REQ req(name,send_timeout,recv_timeout,is_async);
+                reqlist.push_back(req);
+                reqlist[i+1].send(topic,payload);
+                break;
+            }
+        }
+    }
 }
