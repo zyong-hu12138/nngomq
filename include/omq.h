@@ -5,7 +5,7 @@
 #include "utils.h"
 #include "udp.h"
 ///用该头文件即可
-extern catcherror ce;
+
 class catcherror
 {
     public:
@@ -20,3 +20,4 @@ class catcherror
         }
         void error_print();
 };
+extern catcherror ce;

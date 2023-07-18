@@ -26,8 +26,7 @@ void getPyObjectAsString(const char *str, const size_t size, char *out)
     PyObject *pyArgs = PyTuple_Pack(1, pyObject);
     PyObject *pyLoadedObject = PyObject_CallObject(pyLoadsFunc, pyArgs);
     PyObject *pyString = PyObject_Str(pyLoadedObject);
-
-    const char *tmp = PyUnicode_AsUTF8(pyLoadedObject);
+    const char* tmp = PyUnicode_AsUTF8(pyLoadedObject);
     strcpy(out,tmp);
     Py_DECREF(pyPickleModule);
     Py_DECREF(pyLoadsFunc);

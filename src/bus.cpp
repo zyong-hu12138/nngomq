@@ -4,6 +4,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <functional>
+#include "pickle.h"
 #define SEPARATOR "^&*;"
 
 // vector <nng_socket> bus_socks; //用来监听连接的套接字
@@ -16,8 +17,6 @@ Bus::Bus(char *ip,int port)
         sprintf(error,"nng_bus_open error:%s",strerror(errno));
     char url[20];
     sprintf(url, "tcp://%s:%d",ip,port);
-    // urls.push_back(url);
-    // cout<<url<<endl;
     if((rv = nng_listen(bus_sock, url, NULL, 0)) != 0)
         fatal("nng_listen", rv);
     bus_multicast.loop(ip,port);
@@ -60,17 +59,18 @@ void Bus::recv(void (*func)(char*,char*))
 void Bus::_recv_thread(function <void(char*,char*)> func)
 {
     int rv;
-    char *buf = NULL;
-    size_t sz;
     while(1)
-    {    
+    {   
+        char *buf = NULL;
+        size_t sz;
         nng_socket tmp_sock = bus_sock; 
         if((rv = nng_recv(tmp_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
             fatal("nng_recv", rv);
         if(rv==0)
         {
+            getPyObjectAsString(buf,sz,buf);//反序列化后的结果
             char *topic = strtok(buf, SEPARATOR);
-        char *payload = strtok(NULL, SEPARATOR);
+            char *payload = strtok(NULL, SEPARATOR);
         for(int i=0;i<topics.size();i++)
         {
             char *t=(char*)topics[i].data();
@@ -91,7 +91,6 @@ void Bus::_recv_thread(function <void(char*,char*)> func)
 void Bus::_send_thread()
 {
     int rv;
-    // cout<<_queue.size()<<endl;
     while(1)
     {
         if(_queue.size() > 0)
@@ -101,6 +100,9 @@ void Bus::_send_thread()
             char *payload=msg.payload;
             char *buf = new char[strlen(topic) + strlen(SEPARATOR) + strlen(payload) + 1];
             sprintf(buf, "%s%s%s", topic, SEPARATOR, payload);
+            PyObject *pyBytes = congverStringToBytes(buf);
+            Py_ssize_t sz;
+            PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
             for(int i=0;i<bus_multicast.cnt;i++)
             {
                 cout<<"send!!!!"<<endl;
@@ -110,12 +112,13 @@ void Bus::_send_thread()
                     fatal("nng_bus_open", rv);
                 if((rv = nng_dial(tmp_sock, url, NULL, 0)) != 0)
                     fatal("nng_dial", rv);
-                if ((rv = nng_send(tmp_sock, buf, strlen(buf) + 1, 0)) != 0)
+                if ((rv = nng_send(tmp_sock, buf, sz, 0)) != 0)
                     fatal("nng_send", rv);
                 nng_close(tmp_sock);
+        
             }
             _queue.erase(_queue.begin());
-            nng_free(buf, strlen(buf)+1);
+           
         }
     }
 }

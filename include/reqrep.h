@@ -11,6 +11,7 @@
 #include <nng/protocol/reqrep0/req.h>
 #include "pickle.h"
 using namespace std;
+
 // extern ReqRepMulticast *udp ;
 //未实现UDP功能
 // void fatal(const char *func, int rv);
@@ -27,13 +28,14 @@ class REQ
         int recv_timeout;
         bool is_async;
         Target target;
-        char *name;
+        Address self_address;
         int _send_count;
         vector<message> _queue;
         ReqRepMulticast udp_node;
     public:
         REQ(Address nameaddr,int send_timeout,int recv_timeout ,bool is_async )
         {
+            self_address = nameaddr;
             target = {nameaddr.ip,nameaddr.port};
             int rv;
             if((rv = nng_req0_open(&req_sock)) != 0)
@@ -69,8 +71,10 @@ class REQ
         void _send_thread();
         void _recv();
         void recv();
+        char* find_ip();
+        int find_port();
 };
-
+extern vector <REQ> reqlist;
 class REP  //响应请求
 {
     private:
@@ -116,6 +120,7 @@ class REP  //响应请求
         void loop_start(void(*func)(char *,char *));
         void loop_forever(void (*func)(char *,char *));
         void reply(char *topic,char *payload);
+
 };
 void req(Address name,char *topic,char *payload,int send_timeout = 1000,int recv_timeout = 1000 ,bool is_async = true);
 #endif

@@ -4,11 +4,11 @@ using namespace std;
 catcherror ce;
 void catcherror::error_print()
 {
-    
+    char *temp;
     if(error!=NULL && error!=temp)
     {
         cout<<error<<endl;
         
-        char *temp = error;
+        temp = error;
     }
 }

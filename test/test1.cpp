@@ -13,11 +13,10 @@ int main()
 {
     void callback(char*topic,char*payload);
     Bus bus1("127.0.0.1",5001),bus2("127.0.0.1",5002),bus3("127.0.0.1",5003);
-    sleep(5);
+    sleep(1);
     char *topic1 = "hello";
     char *payload1 = "world";
     char *topic2 = "hi";
-    bus1.display();
     bus2.subscribe(topic1);
     bus3.subscribe(topic2);
     bus1.publish(topic1,payload1);
