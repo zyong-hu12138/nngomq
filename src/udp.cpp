@@ -190,9 +190,9 @@ void BusMulticast::loop(char *ip,int port)
     tid2.detach();
 }
 
-void ReqRepMulticast::multi_create(Address name)
+void ReqRepMulticast::multi_create()
 {
-    int port = name.port;
+    
     // 创建套接字
     udp_sock = socket(AF_INET , SOCK_DGRAM , 0);
     if(udp_sock < 0)
@@ -211,7 +211,6 @@ void ReqRepMulticast::multi_create(Address name)
     local_addr.sin_family = AF_INET;
     local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     // local_addr.sin_addr.s_addr = inet_addr(ip);
-    local_addr.sin_port = htons(port);
 
     if(bind(udp_sock,reinterpret_cast<sockaddr*>(&udp_url),sizeof(udp_url))<0)
         fatal("bind",errno);
@@ -231,15 +230,15 @@ void ReqRepMulticast::multi_listen()
     struct sockaddr_in sender;
     socklen_t sender_len=sizeof(sender);
     char *ip;
+    cout<<"multi listen!!!"<<endl;
     while(1)
     {
+        sleep(5);
         char buf[1024];
         memset(buf, 0 ,sizeof(buf));
         struct sockaddr_in sender;
         socklen_t len = sizeof(struct sockaddr_in);
-  
-        // int sender_len=sizeof(sender);
-        int recv_size = recvfrom(udp_sock,buf,sizeof(buf)-1,0,  (struct sockaddr*)&sender,&sender_len);
+        int recv_size = recvfrom(udp_sock,buf,sizeof(buf),0,  (struct sockaddr*)&sender,&sender_len);
         if(recv_size == -1)
         {
             cout<<"Failed to receive data."<<endl;
@@ -251,11 +250,13 @@ void ReqRepMulticast::multi_listen()
             break;
         }
         else if(buf!=NULL)
-        {  
+        {        
+            char *name = strtok(buf,SEPARATOR);
+            char *ip = strtok(NULL,SEPARATOR);
+            int port = atoi(strtok(NULL,SEPARATOR));
             if(sender.sin_family == AF_INET)
             {
                 ip = inet_ntoa(sender.sin_addr);
-
             }
             if(sender.sin_family == AF_INET6)
             {
@@ -265,19 +266,21 @@ void ReqRepMulticast::multi_listen()
                 continue;
             else if(strcmp(ip,get_name_ip(buf)) != 0)
             {
-                set_name_ip(buf,ip);
+                cout<<"!!!!!!"<<ip<<endl;
+                set_name_ip(name,ip);
+                
             }//更新addresslib中的ip值
         }
     }
 }
 
-void ReqRepMulticast::multi_send(Address name)
+void ReqRepMulticast::multi_send(Address name,char *ip,int port)
 {
     char buf[1024];
     while(1)
     {
         memset(buf, 0 ,sizeof(buf));
-        strcpy(buf,name.name);
+        sprintf(buf,"%s%s%s%s%d",name.name,SEPARATOR,ip,SEPARATOR,port);
         int send_size = sendto(udp_sock,buf,sizeof(buf)-1,0,(struct sockaddr *)&udp_url,sizeof(udp_url));
         if(send_size == -1)
         {
@@ -291,21 +294,19 @@ void ReqRepMulticast::multi_send(Address name)
         }
         else
         {
-        usleep(500000);
+            usleep(5000);
         }
     }
 }
-void ReqRepMulticast::loop(Address name)
+void ReqRepMulticast::loop(Address name,char *ip,int port)
 {
-    multi_create(name);
-    thread tid1(&ReqRepMulticast::multi_listen,this);
-    thread tid2(&ReqRepMulticast::multi_send,this,name);
-    tid1.detach();
+    multi_create();
+    thread tid2(&ReqRepMulticast::multi_send,this,name,ip,port);
     tid2.detach();
 }
-void ReqRepMulticast::listen_loop(Address name)
+void ReqRepMulticast::listen_loop()
 {
-    multi_create(name);
+    multi_create();
     thread tid1(&ReqRepMulticast::multi_listen,this);
     tid1.detach();
 }

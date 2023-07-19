@@ -10,7 +10,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <algorithm>
-
+#define SEPARATOR "^&*;"
 using  namespace std;
 void fatal(const char *func, int rv);
 
@@ -49,10 +49,10 @@ class ReqRepMulticast
     public:
     ReqRepMulticast(){};
     ~ReqRepMulticast() {};
-    void multi_create(Address name);//正确创建组播组并绑定以及加入组播组
+    void multi_create();//正确创建组播组并绑定以及加入组播组
     void multi_listen();//监听组播组
-    void multi_send(Address name);//组播信息
-    void loop(Address name);//创建线程，循环组播
-    void listen_loop(Address name);//创建线程，循环听
+    void multi_send(Address name,char *ip,int port);//组播信息
+    void loop(Address name,char *ip,int port);//创建线程，循环组播
+    void listen_loop();//创建线程，循环听
 };
 #endif

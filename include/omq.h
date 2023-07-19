@@ -1,3 +1,4 @@
+#include <iostream>
 #include "bus.h"
 #include "pickle.h"
 #include "parameter.h"
@@ -11,8 +12,13 @@ class catcherror
     public:
         catcherror()
         {
-            Py_Initialize();
             _init_();
+            Py_Initialize();
+            pyPickleModule = PyImport_ImportModule("pickle");
+            pyDumpsFunc = PyObject_GetAttrString(pyPickleModule, "dumps");
+            pyLoadsFunc = PyObject_GetAttrString(pyPickleModule, "loads");
+            ReqRepMulticast udp_node;
+            udp_node.listen_loop();
         }
         ~catcherror()
         {

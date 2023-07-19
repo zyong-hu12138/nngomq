@@ -30,7 +30,7 @@ void REQ::_send(char *topic,char *payload)
     int rv;
     char *buf = NULL;
     Py_ssize_t sz;
-    char *str = (char *)malloc(strlen(topic) + strlen(payload) + strlen(SEPARATOR) + 1);
+    char *str = new char[strlen(topic) + strlen(payload) + strlen(SEPARATOR) + 1];
     sprintf(str, "%s%s%s", topic, SEPARATOR, payload);
     PyObject *pyBytes = congverStringToBytes(str);
     PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
@@ -202,14 +202,9 @@ void req(Address name,char *topic,char *payload,int send_timeout,int recv_timeou
     char *name_ip = name.ip;
     if(reqlist.size() == 0)
     {
-        REQ req(name,send_timeout,recv_timeout,is_async);//is_async==false时可以实现，true _queue有问题
-        reqlist.push_back(req);
-        sleep(2);
-        if(is_async)
-        { 
-            thread tid(&REQ::_send_thread,&reqlist[0]);
-            tid.detach();
-        }
+        // REQ req(name,send_timeout,recv_timeout,is_async);//is_async==false时可以实现，true _queue有问题
+        reqlist.emplace_back(name,send_timeout,recv_timeout,is_async);
+
         message msg = reqlist[0].send(topic,payload);
 
     }

@@ -33,6 +33,7 @@ void _init_()
     mymap.insert(make_pair("LOCATION",Addrlib.LOCATION));
     mymap.insert(make_pair("test",Addrlib.test));
     IP_SET();
+
 }
 char* get_name_ip(string name)
 {

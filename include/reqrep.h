@@ -31,7 +31,7 @@ class REQ
         Address self_address;
         int _send_count;
         vector<message> _queue;
-        ReqRepMulticast udp_node;
+
     public:
         REQ(Address nameaddr,int send_timeout,int recv_timeout ,bool is_async )
         {
@@ -50,7 +50,13 @@ class REQ
                 fatal("nng_dial", rv);//连接到指定的URL
             this->is_async = is_async;
             _send_count = 0;
-            // udp_node.listen_loop(self_address);
+
+                        if(is_async)
+            { 
+                thread tid(&REQ::_send_thread,this);
+                tid.detach();
+            }
+    
         }
         ~REQ()
         {
@@ -93,13 +99,14 @@ class REP  //响应请求
             port = addr.port;
             // while(1)
             // {
-            sprintf(url, "tcp://%s:%d", addr,port);
+            sprintf(url, "tcp://%s:%d", addr.ip,port);
             if((rv = nng_listen(rep_sock, url, NULL, 0)) == 0)
             {
                 printf("listen to port %d\n",port);
                 // break;
             }
-            // udp.loop(nameaddr);  //服务器不断发送消息，告知组播组中自己的ip变化
+
+            udp.loop(nameaddr,"127.0.0.1",addr.port);  //服务器不断发送消息，告知组播组中自己的ip变化
         }
         ~REP()
         {
