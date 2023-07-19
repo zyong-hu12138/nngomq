@@ -2,7 +2,7 @@
 #include <iostream>
 using namespace std;
 catcherror ce;
-ReqRepMulticast udp_node;
+
 void catcherror::error_print()
 {
     char *temp;

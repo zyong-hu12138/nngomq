@@ -15,7 +15,7 @@ void fatal(const char *func, int rv)
     cout<<func<<" error:"<<strerror(errno)<<endl;
 }
 
-
+listen_multicasr udp_node;
 void BusMulticast::multi_create(char *ip,int port)//正确创建组播组并绑定以及加入组播组
 {
     
@@ -201,7 +201,6 @@ void ReqRepMulticast::multi_listen()
     struct sockaddr_in sender;
     socklen_t sender_len=sizeof(sender);
     char *ip;
-    cout<<"multi listen!!!"<<endl;
     while(1)
     {
         char buf[1024];
@@ -224,19 +223,19 @@ void ReqRepMulticast::multi_listen()
             char *name = strtok(buf,SEPARATOR);
             char *ip = strtok(NULL,SEPARATOR);
             int port = atoi(strtok(NULL,SEPARATOR));
-            cout<<"!!!!"<<name<<ip<<port<<endl;
-            if(sender.sin_family == AF_INET)
-            {
-                ip = inet_ntoa(sender.sin_addr);
-            }
-            if(sender.sin_family == AF_INET6)
-            {
-                inet_ntop(AF_INET6, &sender.sin_addr, ip, sizeof(ip));
-            }
+            // if(sender.sin_family == AF_INET)
+            // {
+            //     ip = inet_ntoa(sender.sin_addr);
+            // }
+            // if(sender.sin_family == AF_INET6)
+            // {
+            //     inet_ntop(AF_INET6, &sender.sin_addr, ip, sizeof(ip));
+            // }
             if(strcmp(ip,get_name_ip(buf)) == 0)
                 continue;
             else if(strcmp(ip,get_name_ip(buf)) != 0)
             {
+                cout<<"!!!!!!!!!!!!!!!!!!"<<endl;
                 cout<<"!!!!!!"<<ip<<endl;
                 set_name_ip(name,ip);
                 

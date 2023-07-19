@@ -55,4 +55,16 @@ class ReqRepMulticast
     void loop(Address name,char *ip,int port);//创建线程，循环组播
     void listen_loop();//创建线程，循环听
 };
+
+class listen_multicasr
+{
+    public:
+    ReqRepMulticast udp_node;
+    listen_multicasr()
+    {
+        udp_node.listen_loop();
+    }
+    ~listen_multicasr(){};
+};
+extern listen_multicasr udp_node;
 #endif

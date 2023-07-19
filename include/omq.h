@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "udp.h"
 ///用该头文件即可
-extern ReqRepMulticast udp_node;
+
 class catcherror
 {
     public:
