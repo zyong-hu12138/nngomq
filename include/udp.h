@@ -18,7 +18,7 @@ class BusMulticast
 {
     public:
     // char *udp_url="tcp://239.100.0.2:52000";
-    char *udp_ip = "239.100.0.2";
+    char *udp_ip = "239.100.0.1";
     int udp_port = 52000;
     // vector <string> urllist;
     // vector <string> recv_urllist;
@@ -41,8 +41,8 @@ class BusMulticast
 
 class ReqRepMulticast
 {
-    char *udp_ip = "239.100.0.1";
-    int udp_port = 52000;
+    char *udp_ip = "239.100.0.2";
+    int udp_port = 52001;
     int udp_sock;
     sockaddr_in udp_url{};
     sockaddr_in local_addr{};

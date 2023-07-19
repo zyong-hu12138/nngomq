@@ -17,6 +17,7 @@ int main()
     char *topic1 = "hello";
     char *payload1 = "world";
     char *topic2 = "hi";
+    bus3.display();
     bus2.subscribe(topic1);
     bus3.subscribe(topic2);
     bus1.publish(topic1,payload1);

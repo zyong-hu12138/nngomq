@@ -36,9 +36,9 @@ void BusMulticast::multi_create(char *ip,int port)//正确创建组播组并绑�
     local_addr.sin_family = AF_INET;
     local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     // local_addr.sin_addr.s_addr = inet_addr(ip);
-    local_addr.sin_port = htons(port);
+    local_addr.sin_port = htons(udp_port);
 
-    if(bind(udp_sock,reinterpret_cast<sockaddr*>(&udp_url),sizeof(udp_url))<0)
+    if(bind(udp_sock,reinterpret_cast<sockaddr*>(&local_addr),sizeof(local_addr))<0)
         fatal("bind",errno);
     if(setsockopt(udp_sock,IPPROTO_IP,IP_MULTICAST_IF,reinterpret_cast<char*>(&local_addr), sizeof(local_addr))<0)
         fatal("setsockopt",errno);
@@ -50,6 +50,7 @@ void BusMulticast::multi_create(char *ip,int port)//正确创建组播组并绑�
     if(setsockopt(udp_sock,IPPROTO_IP,IP_ADD_MEMBERSHIP,reinterpret_cast<char*>(&multicast_req),sizeof(multicast_req))<0)
         fatal("setsockopt",errno);
     
+
 }
 
 void BusMulticast::multi_listen()//接收组播数据
@@ -97,7 +98,6 @@ void BusMulticast::multi_listen()//接收组播数据
                 urllist[cnt] = (char*)malloc(sizeof(buf));
                 strcpy(urllist[cnt],buf);
                 
-                // cout<<buf<<", "<<cnt<<", "<<urllist[0]<<endl;
                 cnt++;
             }//初始加入的节点
             int flag=0;
@@ -146,38 +146,6 @@ void BusMulticast::multi_send(char *ip,int port)
         }
     }
 }
-// void BusMulticast::upgrade()
-// {   
-//     sleep(1);
-//    while(1)
-//     {
-//         sleep(0.5);
-//         if(urllist.size()==0&&recv_urllist.size()>0)
-//         {   char *url = recv_urllist[0];
-//             urllist.push_back(url);
-//             recv_urllist.erase(recv_urllist.begin());
-//             break;
-//         }
-//         if(recv_urllist.size()>0&&urllist.size()>0)
-//         {
-//             char *url=recv_urllist[0];
-//             cout<<url<<endl;
-//             auto it = find(urllist.begin(), urllist.end(), url);
-//             if(it != urllist.end())
-//             {
-//                 recv_urllist.erase(recv_urllist.begin());
-//                 continue;
-//             }    
-//             else if(it == urllist.end())
-//             {    
-//                 urllist.push_back(url);
-//                 recv_urllist.erase(recv_urllist.begin());
-               
-//             }
-            
-//         };
-//     }
-// }
 
 void BusMulticast::loop(char *ip,int port)
 {
@@ -190,10 +158,10 @@ void BusMulticast::loop(char *ip,int port)
     tid2.detach();
 }
 
+
 void ReqRepMulticast::multi_create()
 {
-    
-    // 创建套接字
+      // 创建套接字
     udp_sock = socket(AF_INET , SOCK_DGRAM , 0);
     if(udp_sock < 0)
         fatal("socket",errno);
@@ -211,8 +179,9 @@ void ReqRepMulticast::multi_create()
     local_addr.sin_family = AF_INET;
     local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
     // local_addr.sin_addr.s_addr = inet_addr(ip);
+    local_addr.sin_port = htons(udp_port);
 
-    if(bind(udp_sock,reinterpret_cast<sockaddr*>(&udp_url),sizeof(udp_url))<0)
+    if(bind(udp_sock,reinterpret_cast<sockaddr*>(&local_addr),sizeof(local_addr))<0)
         fatal("bind",errno);
     if(setsockopt(udp_sock,IPPROTO_IP,IP_MULTICAST_IF,reinterpret_cast<char*>(&local_addr), sizeof(local_addr))<0)
         fatal("setsockopt",errno);
@@ -224,7 +193,23 @@ void ReqRepMulticast::multi_create()
     if(setsockopt(udp_sock,IPPROTO_IP,IP_ADD_MEMBERSHIP,reinterpret_cast<char*>(&multicast_req),sizeof(multicast_req))<0)
         fatal("setsockopt",errno);
     
-}
+///////////////////////////////检查套接字//////////////////////////
+    sleep(2);
+    ip_mreq checkMembership{};
+    socklen_t checkMembershipLength = sizeof(checkMembership);
+
+    if (getsockopt(udp_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&checkMembership, &checkMembershipLength) == -1) {
+        std::cerr << "无法获取套接字选项" << std::endl;
+        // exit(1);
+    }
+
+    if (memcmp(&checkMembership, &multicast_req, sizeof(multicast_req)) == 0) {
+        std::cout << "套接字已加入组播组" << std::endl;
+    } else {
+        std::cout << "套接字未加入组播组" << std::endl;
+    }
+
+    }
 void ReqRepMulticast::multi_listen()
 {
     struct sockaddr_in sender;
@@ -233,7 +218,6 @@ void ReqRepMulticast::multi_listen()
     cout<<"multi listen!!!"<<endl;
     while(1)
     {
-        sleep(5);
         char buf[1024];
         memset(buf, 0 ,sizeof(buf));
         struct sockaddr_in sender;
@@ -294,7 +278,8 @@ void ReqRepMulticast::multi_send(Address name,char *ip,int port)
         }
         else
         {
-            usleep(5000);
+           
+            usleep(500000);
         }
     }
 }

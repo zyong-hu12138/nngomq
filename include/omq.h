@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "udp.h"
 ///用该头文件即可
-
+extern ReqRepMulticast udp_node;
 class catcherror
 {
     public:
@@ -17,8 +17,8 @@ class catcherror
             pyPickleModule = PyImport_ImportModule("pickle");
             pyDumpsFunc = PyObject_GetAttrString(pyPickleModule, "dumps");
             pyLoadsFunc = PyObject_GetAttrString(pyPickleModule, "loads");
-            ReqRepMulticast udp_node;
-            udp_node.listen_loop();
+            // udp_node.listen_loop();
+            
         }
         ~catcherror()
         {
