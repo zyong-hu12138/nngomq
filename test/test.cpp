@@ -9,13 +9,17 @@ using namespace std;
 #pragma warning
 int main()
 {   
-    string ip="127.0.0.1";
     REP rep(Addrlib.test);
     char *topic = "hello";
     char *payload = "world";
     void callback(char *topic,char *payload);
     rep.loop_start(callback);//rep接收消息
     req(Addrlib.test,topic,payload,100,100,true);
+    // for (int i = 0; i < 10; i++)
+    // {
+    //     cout << "!!!" << reqlist[0].count1<< &reqlist[0].count1<<endl;
+    //     sleep(1);
+    // }
     // Py_Finalize();
     return 0;
 }

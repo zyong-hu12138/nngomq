@@ -50,18 +50,12 @@ class REQ
                 fatal("nng_dial", rv);//连接到指定的URL
             this->is_async = is_async;
             _send_count = 0;
-            if(is_async)
-            { 
-                thread tid(&REQ::_send_thread,this);
-                tid.detach();
-            }
-
             // udp_node.listen_loop(self_address);
         }
         ~REQ()
         {
             nng_close(req_sock);
-            _queue.clear();
+           
         }   
         void _enter();
         void _exit();
@@ -105,7 +99,7 @@ class REP  //响应请求
                 printf("listen to port %d\n",port);
                 // break;
             }
-            udp.loop(nameaddr);  //服务器不断发送消息，告知组播组中自己的ip变化
+            // udp.loop(nameaddr);  //服务器不断发送消息，告知组播组中自己的ip变化
         }
         ~REP()
         {

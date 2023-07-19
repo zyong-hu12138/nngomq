@@ -23,7 +23,7 @@ void REQ::_exit()
 void REQ::_close()
 {
     nng_close(req_sock);
-    _queue.clear();
+
 }
 void REQ::_send(char *topic,char *payload)
 {
@@ -39,11 +39,13 @@ void REQ::_send(char *topic,char *payload)
     free(str);
 }
 void REQ::_send_thread()
-{
+{   
     while(1)
     {
+        if(_queue.size() == 0) continue;
         if(_queue.size() > 0)
-        {
+        {   
+            cout<< _queue.size() <<endl;
             message msg = _queue[0];
             cout<<msg.topic<<msg.payload<<endl;
             _send(msg.topic,msg.payload);
@@ -64,8 +66,8 @@ message REQ::send(char *topic,char *payload)
 {
     if(is_async)
     { 
-        
-        message msg={topic,payload};
+        message msg;
+        msg = {topic,payload};
         _queue.push_back(msg);
         return msg;
     }
@@ -200,9 +202,16 @@ void req(Address name,char *topic,char *payload,int send_timeout,int recv_timeou
     char *name_ip = name.ip;
     if(reqlist.size() == 0)
     {
-        REQ req(name,send_timeout,recv_timeout,is_async);
+        REQ req(name,send_timeout,recv_timeout,is_async);//is_async==false时可以实现，true _queue有问题
         reqlist.push_back(req);
-        reqlist[0].send(topic,payload);
+        sleep(2);
+        if(is_async)
+        { 
+            thread tid(&REQ::_send_thread,&reqlist[0]);
+            tid.detach();
+        }
+        message msg = reqlist[0].send(topic,payload);
+
     }
     else
     {
