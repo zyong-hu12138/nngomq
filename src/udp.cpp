@@ -219,7 +219,7 @@ void ReqRepMulticast::multi_listen()
             break;
         }
         else if(buf!=NULL)
-        {   cout<<buf<<endl;
+        {   
             char *name = strtok(buf,SEPARATOR);
             char *ip = strtok(NULL,SEPARATOR);
             int port = atoi(strtok(NULL,SEPARATOR));
@@ -235,8 +235,7 @@ void ReqRepMulticast::multi_listen()
                 continue;
             else if(strcmp(ip,get_name_ip(buf)) != 0)
             {
-                cout<<"!!!!!!!!!!!!!!!!!!"<<endl;
-                cout<<"!!!!!!"<<ip<<endl;
+
                 set_name_ip(name,ip);
                 
             }//更新addresslib中的ip值

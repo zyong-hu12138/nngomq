@@ -62,6 +62,7 @@ class listen_multicasr
     ReqRepMulticast udp_node;
     listen_multicasr()
     {
+        IP_SET();
         udp_node.listen_loop();
     }
     ~listen_multicasr(){};

@@ -15,6 +15,7 @@ int main()
     char *payload = "world";
     void callback(char *topic,char *payload);
     rep.loop_start(callback);//rep接收消息
+   
     for(int i=0;i<10;i++)
     {   cout<<"??????"<<Addrlib.test.ip<<endl; 
         sleep(1);
@@ -27,8 +28,8 @@ int main()
 }
 void callback(char *topic,char *payload)
 {
-    cout<<"callback"<<endl;
-    printf("topic:%s,payload:%s\n",topic,payload);
+    // cout<<"callback"<<endl;
+    // printf("topic:%s,payload:%s\n",topic,payload);
 }
 // int main()
 // {
