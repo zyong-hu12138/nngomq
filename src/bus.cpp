@@ -115,11 +115,11 @@ void Bus::_send_thread()
                 if ((rv = nng_send(tmp_sock, buf, sz, 0)) != 0)
                     fatal("nng_send", rv);
                 nng_close(tmp_sock);
-            
             }
             _queue.erase(_queue.begin());
            
         }
+        else break;
     }
 }
 void Bus::on_message(char* topic,char* payload)

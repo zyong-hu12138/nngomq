@@ -10,8 +10,9 @@
 using  namespace std;
 void fatal(const char *func, int rv)
 {
-    sprintf(error,"%s error:%s",func,strerror(errno));
-    cin.ignore();
+    // sprintf(error,"%s error:%s",func,strerror(errno));
+    // cin.ignore();
+    cout<<func<<" error:"<<strerror(errno)<<endl;
 }
 
 
@@ -158,7 +159,6 @@ void BusMulticast::loop(char *ip,int port)
     tid2.detach();
 }
 
-
 void ReqRepMulticast::multi_create()
 {
       // 创建套接字
@@ -183,32 +183,19 @@ void ReqRepMulticast::multi_create()
 
     if(bind(udp_sock,reinterpret_cast<sockaddr*>(&local_addr),sizeof(local_addr))<0)
         fatal("bind",errno);
-    if(setsockopt(udp_sock,IPPROTO_IP,IP_MULTICAST_IF,reinterpret_cast<char*>(&local_addr), sizeof(local_addr))<0)
+    
+    struct in_addr if_addr;
+    if_addr.s_addr = inet_addr(SELF_IP);
+    if(setsockopt(udp_sock,IPPROTO_IP,IP_MULTICAST_IF,&if_addr, sizeof(if_addr))<0)
         fatal("setsockopt",errno);
     //加入组播组
     ip_mreq multicast_req{};
     multicast_req.imr_multiaddr.s_addr = inet_addr(udp_ip);
     multicast_req.imr_interface.s_addr = htonl(INADDR_ANY);//self_ip
 
-    if(setsockopt(udp_sock,IPPROTO_IP,IP_ADD_MEMBERSHIP,reinterpret_cast<char*>(&multicast_req),sizeof(multicast_req))<0)
+    if(setsockopt(udp_sock,IPPROTO_IP,IP_ADD_MEMBERSHIP,reinterpret_cast<char*>(&multicast_req),sizeof(multicast_req)) != 0)
         fatal("setsockopt",errno);
     
-///////////////////////////////检查套接字//////////////////////////
-    sleep(2);
-    ip_mreq checkMembership{};
-    socklen_t checkMembershipLength = sizeof(checkMembership);
-
-    if (getsockopt(udp_sock, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&checkMembership, &checkMembershipLength) == -1) {
-        std::cerr << "无法获取套接字选项" << std::endl;
-        // exit(1);
-    }
-
-    if (memcmp(&checkMembership, &multicast_req, sizeof(multicast_req)) == 0) {
-        std::cout << "套接字已加入组播组" << std::endl;
-    } else {
-        std::cout << "套接字未加入组播组" << std::endl;
-    }
-
     }
 void ReqRepMulticast::multi_listen()
 {
@@ -222,7 +209,7 @@ void ReqRepMulticast::multi_listen()
         memset(buf, 0 ,sizeof(buf));
         struct sockaddr_in sender;
         socklen_t len = sizeof(struct sockaddr_in);
-        int recv_size = recvfrom(udp_sock,buf,sizeof(buf),0,  (struct sockaddr*)&sender,&sender_len);
+        int recv_size = recvfrom(udp_sock,buf,sizeof(buf) - 1,0,(struct sockaddr*)&sender,&sender_len);
         if(recv_size == -1)
         {
             cout<<"Failed to receive data."<<endl;
@@ -234,10 +221,11 @@ void ReqRepMulticast::multi_listen()
             break;
         }
         else if(buf!=NULL)
-        {        
+        {   cout<<buf<<endl;
             char *name = strtok(buf,SEPARATOR);
             char *ip = strtok(NULL,SEPARATOR);
             int port = atoi(strtok(NULL,SEPARATOR));
+            cout<<"!!!!"<<name<<ip<<port<<endl;
             if(sender.sin_family == AF_INET)
             {
                 ip = inet_ntoa(sender.sin_addr);
@@ -278,7 +266,6 @@ void ReqRepMulticast::multi_send(Address name,char *ip,int port)
         }
         else
         {
-           
             usleep(500000);
         }
     }

@@ -22,7 +22,7 @@ include_directories(${Python_INCLUDE_DIRS})
 # 生成动态链接库
 add_library(omq SHARED ${SRC_FILES})
 # 示例代码可执行文件
-add_executable(test test/test1.cpp)
+add_executable(test test/test.cpp)
 # 链接动态链接库
 target_link_libraries(test omq)
 find_package(nng REQUIRED)

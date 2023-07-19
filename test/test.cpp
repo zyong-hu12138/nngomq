@@ -33,8 +33,8 @@ int main()
 {
     ReqRepMulticast udp;
     udp.loop(Addrlib.test,"127.0.0.1",51001);
-    ReqRepMulticast udp_node;
-    udp_node.listen_loop();
-    sleep(10);
+    ReqRepMulticast udp1;
+    udp1.listen_loop();
+    sleep(20);
     return 0;
 }
