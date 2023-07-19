@@ -17,8 +17,6 @@ class catcherror
             pyPickleModule = PyImport_ImportModule("pickle");
             pyDumpsFunc = PyObject_GetAttrString(pyPickleModule, "dumps");
             pyLoadsFunc = PyObject_GetAttrString(pyPickleModule, "loads");
-            // udp_node.listen_loop();
-            
         }
         ~catcherror()
         {

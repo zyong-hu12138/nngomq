@@ -3,6 +3,7 @@
 #include "parameter.h"
 #include "utils.h"
 #include "udp.h"
+
 #include <vector>
 #include <thread>
 #include <unistd.h>
@@ -31,6 +32,7 @@ class REQ
         Address self_address;
         int _send_count;
         vector<message> _queue;
+        ReqRepMulticast udp_node;
     public:
         REQ(Address nameaddr,int send_timeout,int recv_timeout ,bool is_async )
         {
@@ -55,6 +57,7 @@ class REQ
                 thread tid(&REQ::_send_thread,this);
                 tid.detach();
             }
+            udp_node.listen_loop();
         }
         ~REQ()
         {

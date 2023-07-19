@@ -169,12 +169,11 @@ void ReqRepMulticast::multi_create()
     int reuse = 1;
     if(setsockopt(udp_sock,SOL_SOCKET,SO_REUSEADDR,&reuse,sizeof(reuse))<0)
         fatal("setsockopt",errno);
-
+    
     //设置组播地址和端口
     udp_url.sin_family = AF_INET;
     udp_url.sin_addr.s_addr = inet_addr(udp_ip);
     udp_url.sin_port = htons(udp_port);
-
     //绑定到本地地址和端口
     local_addr.sin_family = AF_INET;
     local_addr.sin_addr.s_addr = htonl(INADDR_ANY);
