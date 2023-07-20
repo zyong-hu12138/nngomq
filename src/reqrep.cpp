@@ -127,7 +127,7 @@ void REP::_exit()
 {
     nng_close(rep_sock);
 }
-void REP::main_thread(void (*func)(char* ,char *))
+void REP::main_thread(char* (*func)(char* ,char *))
 {
     int rv;
     char *buf = NULL;
@@ -148,26 +148,33 @@ void REP::main_thread(void (*func)(char* ,char *))
         printf("REP GET: %s %s\n", topic, payload);
         if(func!=NULL)
         {
-            func(topic,payload);
+            char* reply_msg = func(topic,payload);
+            PyObject *pyBytes = congverStringToBytes(reply_msg);
+            Py_ssize_t sz;
+            PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
+            cout<<"rep send"<<endl;
+            if((rv = nng_send(rep_sock, buf,sz, 0)) != 0)
+                fatal("nng_send", rv);
         }
         else{
             cout<<topic<<":"<<payload<<endl;
+            PyObject *pyBytes = congverStringToBytes("ok");
+            Py_ssize_t sz;
+            PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
+            cout<<"rep send"<<endl;
+            if((rv = nng_send(rep_sock, buf,sz, 0)) != 0)
+                fatal("nng_send", rv);
         }
-        PyObject *pyBytes = congverStringToBytes("ok");
-        Py_ssize_t sz;
-        PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
-        cout<<"rep send"<<endl;
-        if((rv = nng_send(rep_sock, buf,sz, 0)) != 0)
-            fatal("nng_send", rv);
+        
     }
     }
 }
-void REP::loop_start(void (*func)(char* ,char *))
+void REP::loop_start(char* (*func)(char* ,char *))
 {
     thread tid(&REP::main_thread,this,func);
     tid.detach();//接收消息的线程
 }
-void REP::loop_forever(void (*func)(char* ,char *))
+void REP::loop_forever(char* (*func)(char* ,char *))
 {
     main_thread(func);
 }

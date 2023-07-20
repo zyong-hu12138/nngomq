@@ -10,9 +10,9 @@
 using  namespace std;
 void fatal(const char *func, int rv)
 {
-    // sprintf(error,"%s error:%s",func,strerror(errno));
+    sprintf(error,"%s error:%s",func,strerror(errno));
     // cin.ignore();
-    cout<<func<<" error:"<<strerror(errno)<<endl;
+    // cout<<func<<" error:"<<strerror(errno)<<endl;
 }
 
 listen_multicasr udp_node;
@@ -41,8 +41,11 @@ void BusMulticast::multi_create(char *ip,int port)//正确创建组播组并绑�
 
     if(bind(udp_sock,reinterpret_cast<sockaddr*>(&local_addr),sizeof(local_addr))<0)
         fatal("bind",errno);
-    if(setsockopt(udp_sock,IPPROTO_IP,IP_MULTICAST_IF,reinterpret_cast<char*>(&local_addr), sizeof(local_addr))<0)
+    struct in_addr if_addr;
+    if_addr.s_addr = inet_addr(SELF_IP);
+    if(setsockopt(udp_sock,IPPROTO_IP,IP_MULTICAST_IF,&if_addr, sizeof(if_addr))<0)
         fatal("setsockopt",errno);
+
     //加入组播组
     ip_mreq multicast_req{};
     multicast_req.imr_multiaddr.s_addr = inet_addr(udp_ip);
@@ -58,7 +61,7 @@ void BusMulticast::multi_listen()//接收组播数据
 {
     struct sockaddr_in sender;
     socklen_t sender_len=sizeof(sender);
-    cout << "multi listen!!!!!!" << endl;
+    // cout << "multi listen!!!!!!" << endl;
     while(1)
     {
         char buf[1024];
@@ -113,7 +116,7 @@ void BusMulticast::multi_listen()//接收组播数据
             }//判断是否已经存在
             if(flag==0) 
             {
-                cout<< "new url"<<endl;
+                // cout<< "new url"<<endl;
                 urllist[cnt] = (char*)malloc(sizeof(buf));
                 strcpy(urllist[cnt],buf);
                 cnt++;

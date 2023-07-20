@@ -18,38 +18,39 @@ Addresslib Addrlib;
 map<string,Address*> mymap; 
 void _init_()
 {
-    mymap.insert(make_pair("VISION",Addrlib*.VISION));//插入元素
-    mymap.insert(make_pair("RADAR",Addrlib*.RADAR));
-    mymap.insert(make_pair("NANO_CAM",Addrlib*.NANO_CAM));
-    mymap.insert(make_pair("NANO_LOC",Addrlib*.NANO_LOC));
-    mymap.insert(make_pair("NANO_LOG",Addrlib*.NANO_LOG));
-    mymap.insert(make_pair("APP_COMM",Addrlib*.APP_COMM));
-    mymap.insert(make_pair("MAIN",Addrlib*.MAIN));
-    mymap.insert(make_pair("COMMUNICATION",Addrlib*.COMMUNICATION));
-    mymap.insert(make_pair("PLAN",Addrlib*.PLAN));
-    mymap.insert(make_pair("DECISION",Addrlib*.DECISION));
-    mymap.insert(make_pair("CONTROL",Addrlib*.CONTROL));
-    mymap.insert(make_pair("LOG",Addrlib*.LOG));
-    mymap.insert(make_pair("LOCATION",Addrlib*.LOCATION));
-    mymap.insert(make_pair("test",Addrlib*.test));
+    mymap.insert(make_pair("VISION",&Addrlib.VISION));//插入元素
+    mymap.insert(make_pair("RADAR",&Addrlib.RADAR));
+    mymap.insert(make_pair("NANO_CAM",&Addrlib.NANO_CAM));
+    mymap.insert(make_pair("NANO_LOC",&Addrlib.NANO_LOC));
+    mymap.insert(make_pair("NANO_LOG",&Addrlib.NANO_LOG));
+    mymap.insert(make_pair("APP_COMM",&Addrlib.APP_COMM));
+    mymap.insert(make_pair("MAIN",&Addrlib.MAIN));
+    mymap.insert(make_pair("COMMUNICATION",&Addrlib.COMMUNICATION));
+    mymap.insert(make_pair("PLAN",&Addrlib.PLAN));
+    mymap.insert(make_pair("DECISION",&Addrlib.DECISION));
+    mymap.insert(make_pair("CONTROL",&Addrlib.CONTROL));
+    mymap.insert(make_pair("LOG",&Addrlib.LOG));
+    mymap.insert(make_pair("LOCATION",&Addrlib.LOCATION));
+    mymap.insert(make_pair("test",&Addrlib.test));
     IP_SET();
 
 }
 char* get_name_ip(string name)
 {
-    return mymap[name].ip;
+    return mymap[name]->ip;
 }
 int get_name_port(string name)
 {
-    return mymap[name].port;
+    return mymap[name]->port;
 }
 void set_name_ip(string name, char* ip)
 {
-    mymap[name].ip = ip;
+    // strcpy(Addrlib.test.ip,ip);
+    strcpy(mymap[name]->ip , ip);
 }
 void set_name_port(string name, int port)
 {
-    mymap[name].port = port;
+    mymap[name]->port = port;
 }
 int IP_SET()
 {

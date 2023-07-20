@@ -50,7 +50,7 @@ class Addresslib
     Address test={"test",SELF_IP,51000,"ipc:///tmp/test.ipc"};
 };
 extern Addresslib Addrlib;
-extern map<string,Address> mymap;
+extern map<string,Address*> mymap;
 
 void _init_();
 extern char *get_name_ip(string name);

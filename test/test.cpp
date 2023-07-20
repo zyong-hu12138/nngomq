@@ -11,10 +11,14 @@ using namespace std;
 int main()
 {   
     REP rep(Addrlib.test);
+    sleep(2);
+    cout<<"HHHHHHHH"<<Addrlib.test.ip<<endl;
+    REP rep1(Addrlib.test);
+    sleep(5);
     char *topic = "hello";
     char *payload = "world";
-    void callback(char *topic,char *payload);
-    rep.loop_start(callback);//rep接收消息
+    char* callback(char *topic,char *payload);
+    rep1.loop_start(callback);//rep接收消息
    
     for(int i=0;i<10;i++)
     {   cout<<"??????"<<Addrlib.test.ip<<endl; 
@@ -26,8 +30,9 @@ int main()
     sleep(10);
     return 0;
 }
-void callback(char *topic,char *payload)
+char*  callback(char *topic,char *payload)
 {
+    return "ok!!!!";
     // cout<<"callback"<<endl;
     // printf("topic:%s,payload:%s\n",topic,payload);
 }

@@ -116,11 +116,11 @@ class REP  //响应请求
         }   
         void _enter();
         void _exit();
-        void main_thread(void(*func)(char *,char *));
+        void main_thread(char*(*func)(char *,char *));
         void _close();
        // void notify_thread();暂时不考虑
-        void loop_start(void(*func)(char *,char *));
-        void loop_forever(void (*func)(char *,char *));
+        void loop_start(char*(*func)(char *,char *));
+        void loop_forever(char* (*func)(char *,char *));
         void reply(char *topic,char *payload);
 
 };

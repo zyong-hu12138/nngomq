@@ -105,7 +105,7 @@ void Bus::_send_thread()
             PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
             for(int i=0;i<bus_multicast.cnt;i++)
             {
-                cout<<"send!!!!"<<endl;
+                // cout<<"send!!!!"<<endl;
                 char *url = (char *)bus_multicast.urllist[i];
                 nng_socket tmp_sock;
                 if ((rv = nng_bus0_open(&tmp_sock)) != 0)
