@@ -86,9 +86,9 @@ int main() {
 
     // // 关闭套接字
     // close(sockfd);
-    char *udp_ip = "333";
-    char *ip=udp_ip;
-    ip="444";
-    cout<<udp_ip<<endl;
+    int port1 = 52000;
+    int *port2=&port1;
+    *port2=51001;
+    cout<<port1<<endl;
     return 0;
 }
