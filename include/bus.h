@@ -39,14 +39,14 @@ class Bus
         }
         void __enter__();
         void __exit__();
-        void publish(char* topic,char* payload);//发送信息到总线，先传入队列中
+        void publish(char* topic,PyObject* payload);//发送信息到总线，先传入队列中
         void subscribe(char* topic);
         void close();
         void loop_start();
-        void on_message(char* topic,char* payload);
-        void _recv_thread(function <void(char*,char*)> func);
+        void on_message(char* topic,PyObject* payload);
+        void _recv_thread(function <void(char*,PyObject*)> func);
         void _send_thread();
-        void recv(void (*func)(char*,char*));
+        void recv(void (*func)(char*,PyObject*));
         //void _notify_thread();
         void display();
 };

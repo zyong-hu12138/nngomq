@@ -259,6 +259,7 @@ void ReqRepMulticast::multi_send(Address name,char *ip,int port)
             cout<<"Failed to send data."<<endl;
             break;
         }
+        
         else if(send_size == 0)
         {
             cout<<"Connection closed."<<endl;

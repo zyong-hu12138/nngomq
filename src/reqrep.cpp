@@ -1,3 +1,4 @@
+//size 用于nng_socket函数中，sz用于自己反序列化函数中
 #include "reqrep.h"
 #include "utils.h"
 #include "udp.h"
@@ -5,9 +6,12 @@
 #include <thread>
 #include <unistd.h>
 #include "pickle.h"
+#include <mutex>
+
 #define SEPARATOR "^&*;"
 using namespace std;
-
+mutex mtx;//声明互斥锁对象
+vector<message> msg_recv;
 // ReqRepMulticast *udp;
 //REQ类中函数的实现
 void REQ::_enter()
@@ -25,19 +29,24 @@ void REQ::_close()
     nng_close(req_sock);
 
 }
-void REQ::_send(char *topic,char *payload)
+void REQ::_send(char *topic, PyObject *payload)
 {
     int rv;
     char *buf = NULL;
     Py_ssize_t sz;
-    char *str = new char[strlen(topic) + strlen(payload) + strlen(SEPARATOR) + 1];
-    sprintf(str, "%s%s%s", topic, SEPARATOR, payload);
-    PyObject *pyBytes = congverStringToBytes(str);
-    PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
-    if((rv = nng_send(req_sock, buf, sz, 0)) != 0) //此处超时
+    PyObject *pyBytes = congverStringToBytes(payload);
+    PyBytes_AsStringAndSize(pyBytes, &buf, &sz);//将payload 序列化后转成char*
+
+    size_t size = strlen(topic) + sz + strlen(SEPARATOR) ;
+    char *str = new char[size];
+    int len = sprintf(str, "%s%s", topic, SEPARATOR);
+    memcpy(str + len, buf, sz);
+    //发送序列化后的消息
+    if((rv = nng_send(req_sock, str, size , 0)) != 0) //此处超时
         fatal("nng_send", rv);
     free(str);
 }
+
 void REQ::_send_thread()
 {   
     while(1)
@@ -45,24 +54,27 @@ void REQ::_send_thread()
         if(_queue.size() == 0) continue;
         if(_queue.size() > 0)
         {   
-            cout<< _queue.size() <<endl;
             message msg = _queue[0];
-            cout<<msg.topic<<msg.payload<<endl;
             _send(msg.topic,msg.payload);
             int rv;
             char *buf = NULL;
+            size_t size;
             size_t sz;
-            if((rv = nng_recv(req_sock,&buf, &sz, NNG_FLAG_ALLOC)) != 0)
+            if((rv = nng_recv(req_sock,&buf, &size, NNG_FLAG_ALLOC)) != 0)
                 fatal("nng_recv", rv);
-            getPyObjectAsString(buf,sz,buf);//反序列化后的结果
+            //得到topic和序列化后的payload
             char *topic = strtok(buf, SEPARATOR);
-            char *payload = strtok(NULL, SEPARATOR);
-            cout<<"req _recv"<<topic<<payload<<endl;
+            char *payload_str = strtok(NULL, SEPARATOR);
+            PyObject *payload ;
+            getPyObjectAsString(payload_str, size-strlen(topic)-strlen(SEPARATOR) , &payload);
+            //得到payload的值
+           message tmp = {topic,payload};
+            msg_recv.push_back(tmp);
             _queue.erase(_queue.begin());
         }
     }
 }
-message REQ::send(char *topic,char *payload)
+message REQ::send(char *topic,PyObject *payload)
 {
     if(is_async)
     { 
@@ -75,14 +87,16 @@ message REQ::send(char *topic,char *payload)
     {  
         _send(topic,payload);
         char *buf = NULL;
+        size_t size;
         size_t sz;
         int rv;
-        if((rv = nng_recv(req_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
+        if((rv = nng_recv(req_sock, &buf, &size, NNG_FLAG_ALLOC)) != 0)
             fatal("nng_recv", rv);
-        getPyObjectAsString(buf,sz,buf);//反序列化后的结果
+        //得到topic 和序列化后的payload
         char *topic = strtok(buf, SEPARATOR);
-        char *payload = strtok(NULL, SEPARATOR);
-        cout<<topic<<payload<<endl;
+        char *payload_str = strtok(NULL, SEPARATOR);
+        PyObject *payload ;
+        getPyObjectAsString(payload_str,size-strlen(topic)-strlen(SEPARATOR),&payload);
         message msg={topic,payload};
         return msg;
     }
@@ -90,23 +104,23 @@ message REQ::send(char *topic,char *payload)
 void REQ::_recv()
 {
     int rv;
-
-    sleep(0.01);
     while(1)
     {
         char *buf = NULL;
+        size_t size;
         size_t sz;
-        if((rv = nng_recv(req_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
+        if((rv = nng_recv(req_sock, &buf, &size, NNG_FLAG_ALLOC)) != 0)
             fatal("nng_recv", rv);
         
         if(rv == 0)
         {
-        getPyObjectAsString(buf,sz,buf);//反序列化后的结果
-        char *topic = strtok(buf, SEPARATOR);
-        char *payload = strtok(NULL, SEPARATOR);
-        cout<<"req _recv"<<endl;
-        cout<<topic<<payload<<endl;
-        exit(0);
+            //得到topic和序列化后的payload
+            char *topic = strtok(buf, SEPARATOR);
+            char *payload_str = strtok(NULL, SEPARATOR);
+            PyObject *payload ;
+            
+            getPyObjectAsString(payload_str,size-strlen(topic)-strlen(SEPARATOR), &payload);
+            exit(0);
         }
 
     }
@@ -116,6 +130,18 @@ void REQ::recv()
     thread tid(&REQ::_recv,this);
     tid.detach();
 }
+
+//设置rep的超时时间,成功设置返回0，否则返回-1
+int REQ::set_timeout(int send_timeout , int recv_timeout)
+{
+    int rv;
+    if(rv = nng_socket_set_ms(req_sock, NNG_OPT_SENDTIMEO, send_timeout) != 0)
+        return -1;
+    if(rv = nng_socket_set_ms(req_sock, NNG_OPT_RECVTIMEO, recv_timeout) != 0)
+        return -1;
+    return 0;
+}
+
 //REP类中函数的实现
 void REP::_enter()
 {
@@ -127,71 +153,72 @@ void REP::_exit()
 {
     nng_close(rep_sock);
 }
-void REP::main_thread(char* (*func)(char* ,char *))
+void REP::main_thread(message (*func)(char* ,PyObject *))//接收消息并通过回调函数回复消息,回调函数接收主题和payload，返回消息体
 {
     int rv;
     char *buf = NULL;
     size_t sz;
+    size_t size;
     while(1)
     {
-        if((rv = nng_recv(rep_sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0)
+        if((rv = nng_recv(rep_sock, &buf, &size, NNG_FLAG_ALLOC)) != 0)
             fatal("nng_recv", rv);
         if(rv==0)
         {
-        cout<<"rep recv"<<endl;
-        getPyObjectAsString(buf,sz,buf);//反序列化后的结果
+        //得到topic和序列化后的payload
         char *topic = strtok(buf, SEPARATOR);
-        char *payload = strtok(NULL, SEPARATOR);
-        // cout<<topic<<payload<<endl;
+        char *payload_str = strtok(NULL, SEPARATOR);
+        PyObject *payload ;
+        getPyObjectAsString(payload_str,size,&payload);
         message msg={topic,payload};
         _queue.push_back(msg);
-        printf("REP GET: %s %s\n", topic, payload);
         if(func!=NULL)
         {
-            char* reply_msg = func(topic,payload);
-            PyObject *pyBytes = congverStringToBytes(reply_msg);
+            message reply_msg = func(topic,payload); //pyobect
+            char *reply_topic = reply_msg.topic;
+            PyObject *reply_payload = reply_msg.payload;
+            char *buf = NULL;
+            buf = (char*)malloc(1024*sizeof(char));
+            PyObject *pyBytes = congverStringToBytes(reply_payload);
+            PyObject_Print(pyBytes, stdout, Py_PRINT_RAW);
             Py_ssize_t sz;
             PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
-            cout<<"rep send"<<endl;
-            if((rv = nng_send(rep_sock, buf,sz, 0)) != 0)
+            char *str = new char[strlen(topic) + sz + strlen(SEPARATOR)];
+            int len = sprintf(str, "%s%s", reply_topic, SEPARATOR);
+            memcpy(str + len, buf, sz);
+            size_t size = len+sz;
+            if((rv = nng_send(rep_sock, str, size , 0)) != 0)
                 fatal("nng_send", rv);
         }
         else{
-            cout<<topic<<":"<<payload<<endl;
-            PyObject *pyBytes = congverStringToBytes("ok");
+            char *buf = NULL;
+            char * reply_topic = "no message";
+            PyObject *reply_payload = Py_None;
+            PyObject *pyBytes = congverStringToBytes(payload);
             Py_ssize_t sz;
             PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
-            cout<<"rep send"<<endl;
-            if((rv = nng_send(rep_sock, buf,sz, 0)) != 0)
+            size_t size = strlen(reply_topic) + strlen(buf) + strlen(SEPARATOR) + 1;
+            char *str = new char[size];
+            sprintf(str, "%s%s%s", topic, SEPARATOR, buf);
+            //无回调函数时返回tpopic和空的payload
+        
+            if((rv = nng_send(rep_sock, str , size , 0)) != 0)
                 fatal("nng_send", rv);
         }
         
     }
     }
 }
-void REP::loop_start(char* (*func)(char* ,char *))
+void REP::loop_start(message (*func)(char *,PyObject *))
 {
     thread tid(&REP::main_thread,this,func);
     tid.detach();//接收消息的线程
 }
-void REP::loop_forever(char* (*func)(char* ,char *))
+void REP::loop_forever(message (*func)(char *,PyObject *))
 {
     main_thread(func);
 }
-void REP::reply(char *topic,char *payload)
-{
-    int rv;
-    char *buf = NULL;
-    size_t sz;
-    char *msg = (char *)malloc(strlen(topic) + strlen(payload) + strlen(SEPARATOR) + 1);
-    sprintf(msg, "%s%s%s", topic, SEPARATOR, payload);
-    // cout<<"rep reply"<<endl;
-    if((rv = nng_send(rep_sock, msg, strlen(msg) + 1, 0)) != 0)
-        fatal("nng_send", rv);
-        // cout<<"rep reply"<<endl;
-        sleep(0.01);
-    free(msg);
-}
+
 int REQ::find_port()
 {
     return self_address.port;
@@ -203,7 +230,7 @@ char* REQ::find_ip()
 vector <REQ> reqlist;
 
 
-void req(Address name,char *topic,char *payload,int send_timeout,int recv_timeout ,bool is_async)
+void req(Address name,char *topic,PyObject *payload,int send_timeout,int recv_timeout ,bool is_async)
 {
     int name_port = name.port;
     char *name_ip = name.ip;
@@ -211,26 +238,31 @@ void req(Address name,char *topic,char *payload,int send_timeout,int recv_timeou
     {
         // REQ req(name,send_timeout,recv_timeout,is_async);//is_async==false时可以实现，true _queue有问题
         reqlist.emplace_back(name,send_timeout,recv_timeout,is_async);
-
         message msg = reqlist[0].send(topic,payload);
 
     }
+  
     else
     {
-        for(int i=0;i<reqlist.size();i++)
+        int i=0;
+        for(i=0;i<reqlist.size();i++)
         {
+
             if(reqlist[i].find_port() == name_port && strcmp(reqlist[i].find_ip(),name_ip) == 0)
             {
+                lock_guard<mutex> lock(mtx);
+                if(reqlist[i].set_timeout(send_timeout , recv_timeout) != 0)
+                    printf("set timeout failure");
                 reqlist[i].send(topic,payload);
                 break;
             }
-            else if(i == reqlist.size() - 1)
+
+        }
+        if(i == reqlist.size())
             {
                 REQ req(name,send_timeout,recv_timeout,is_async);
                 reqlist.push_back(req);
                 reqlist[i+1].send(topic,payload);
-                break;
             }
-        }
     }
 }

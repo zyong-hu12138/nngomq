@@ -8,33 +8,64 @@
 #include <iostream>
 using namespace std;
 #pragma warning
+PyObject* convertIntToPyObject(int value);
+
 int main()
 {   
     REP rep(Addrlib.test);
-    sleep(2);
-    cout<<"HHHHHHHH"<<Addrlib.test.ip<<endl;
-    REP rep1(Addrlib.test);
-    sleep(5);
-    char *topic = "hello";
-    char *payload = "world";
-    char* callback(char *topic,char *payload);
-    rep1.loop_start(callback);//rep接收消息
-   
-    for(int i=0;i<10;i++)
-    {   cout<<"??????"<<Addrlib.test.ip<<endl; 
-        sleep(1);
-        req(Addrlib.test,topic,payload,100,100,true);   
-         
-    }
-
-    sleep(10);
+    char topic[24] = "hello";
+    PyObject *payload = convertIntToPyObject(1);
+    message callback(char *topic,PyObject *payload);
+    rep.loop_start(callback);//rep接收消息
+    req(Addrlib.test,topic,payload,100,100,true);  
+    sleep(1);
+    printf(msg_recv[0].topic);
+    //python printf(msg_recv[0].payload);
+    PyObject_Print(msg_recv[0].payload, stdout, Py_PRINT_RAW);
     return 0;
 }
-char*  callback(char *topic,char *payload)
+message  callback(char *topic,PyObject* payload)
 {
-    return "ok!!!!";
+    message msg;
+    msg.topic = "camera";
+
+    PyObject *tmp = convertIntToPyObject(1);
+    if(payload == tmp)
+    {
+        cout<<"callback"<<endl;
+        // msg.payload = PyUnicode_FromString("ajvfskvsadkalsn");
+        // msg.payload = convertIntToPyObject(1);
+        // msg.payload = convertIntToPyObject(1);
+        PyObject *argModule = PyImport_ImportModule("argparse");
+        PyObject* namespaceClass = PyObject_GetAttrString(argModule, "Namespace");
+        PyObject* aObj = PyObject_CallObject(namespaceClass, nullptr);
+
+        PyObject* globals = PyDict_New();
+        PyObject* locals = PyDict_New();
+
+        // 创建一个Python字典用于存储 {'front_long': 1, 'front_short': 0, 'left_fish': 2}
+        PyObject* cameraIdDict = PyDict_New();
+        PyDict_SetItemString(cameraIdDict, "front_long", PyLong_FromLong(1));
+        PyDict_SetItemString(cameraIdDict, "front_short", PyLong_FromLong(0));
+        PyDict_SetItemString(cameraIdDict, "left_fish", PyLong_FromLong(2));
+
+        // 将创建的字典赋值给 aObj.camera_id
+        PyObject_SetAttrString(aObj, "camera_id", cameraIdDict);
+
+        msg.payload = aObj;
+        return msg;
+    }
+    else
+    {
+        cout<<"error"<<endl;
+        msg.payload = convertIntToPyObject(0);
+        return msg;
+    }
     // cout<<"callback"<<endl;
     // printf("topic:%s,payload:%s\n",topic,payload);
+}
+PyObject* convertIntToPyObject(int value) {
+    return PyLong_FromLong(value);
 }
 // int main()
 // {

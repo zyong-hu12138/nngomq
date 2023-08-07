@@ -12,7 +12,7 @@
 #include <nng/protocol/reqrep0/req.h>
 #include "pickle.h"
 using namespace std;
-
+extern vector<message> msg_recv;
 // extern ReqRepMulticast *udp ;
 //未实现UDP功能
 // void fatal(const char *func, int rv);
@@ -52,7 +52,7 @@ class REQ
             this->is_async = is_async;
             _send_count = 0;
 
-                        if(is_async)
+            if(is_async)
             { 
                 thread tid(&REQ::_send_thread,this);
                 tid.detach();
@@ -67,13 +67,14 @@ class REQ
         void _enter();
         void _exit();
         void _close();
-        void _send(char *topic,char *payload);
-        message send(char *topic,char *payload);
+        void _send(char *topic,PyObject *payload);
+        message send(char *topic,PyObject *payload);
         void _send_thread();
         void _recv();
         void recv();
         char* find_ip();
         int find_port();
+        int set_timeout(int send_timeout,int recv_timeout);
 };
 extern vector <REQ> reqlist;
 class REP  //响应请求
@@ -100,14 +101,14 @@ class REP  //响应请求
             port = addr.port;
             // while(1)
             // {
+    
             sprintf(url, "tcp://%s:%d", addr.ip,port);
             if((rv = nng_listen(rep_sock, url, NULL, 0)) == 0)
             {
                 printf("listen to port %d\n",port);
                 // break;
             }
-
-            udp.loop(nameaddr,"127.0.0.1",addr.port);  //服务器不断发送消息，告知组播组中自己的ip变化
+            udp.loop(nameaddr,SELF_IP,addr.port);  //服务器不断发送消息，告知组播组中自己的ip变化
         }
         ~REP()
         {
@@ -116,13 +117,12 @@ class REP  //响应请求
         }   
         void _enter();
         void _exit();
-        void main_thread(char*(*func)(char *,char *));
+        void main_thread(message (*func)(char *,PyObject *));
         void _close();
        // void notify_thread();暂时不考虑
-        void loop_start(char*(*func)(char *,char *));
-        void loop_forever(char* (*func)(char *,char *));
-        void reply(char *topic,char *payload);
+        void loop_start(message (*func)(char *,PyObject *));
+        void loop_forever(message (*func)(char *,PyObject *));
 
 };
-void req(Address name,char *topic,char *payload,int send_timeout = 1000,int recv_timeout = 1000 ,bool is_async = true);
+void req(Address name,char *topic,PyObject *payload,int send_timeout = 1000,int recv_timeout = 1000 ,bool is_async = true);
 #endif

@@ -6,6 +6,6 @@ using namespace std;
 extern PyObject *pyPickleModule ;
 extern PyObject *pyDumpsFunc ;
 extern PyObject *pyLoadsFunc;
-PyObject *congverStringToBytes(const char *str);
-void getPyObjectAsString(const char *str,const size_t size,char* out);
+PyObject *congverStringToBytes(PyObject *inputObj);
+void getPyObjectAsString(const char *str,const size_t size, PyObject **outputObj);
 #endif

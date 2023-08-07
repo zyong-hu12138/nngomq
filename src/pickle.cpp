@@ -6,28 +6,19 @@ using namespace std;
 PyObject *pyPickleModule ;
 PyObject *pyDumpsFunc ;
 PyObject *pyLoadsFunc;
-PyObject *congverStringToBytes(const char *str)
+PyObject *congverStringToBytes(PyObject *inputObj)//Pyobject
 {   
-    PyObject *pyString = PyUnicode_FromString(str);
-    PyObject *pyArgs = PyTuple_Pack(1, pyString);
+    PyObject *pyArgs = PyTuple_Pack(1, inputObj);
     PyObject *pyBytes = PyObject_CallObject(pyDumpsFunc, pyArgs);
-    Py_DECREF(pyString);
     Py_DECREF(pyArgs);
     // Py_Finalize();
     return pyBytes;
 }
-void getPyObjectAsString(const char *str, const size_t size, char *out)
+
+void getPyObjectAsString(const char *str, const size_t size, PyObject **outputObj)
 {
-    // Py_Initialize();
     PyObject *pyObject = PyBytes_FromStringAndSize(str, size);
-    
     PyObject *pyArgs = PyTuple_Pack(1, pyObject);
-    PyObject *pyLoadedObject = PyObject_CallObject(pyLoadsFunc, pyArgs);
-    PyObject *pyString = PyObject_Str(pyLoadedObject);
-    const char* tmp = PyUnicode_AsUTF8(pyLoadedObject);
-    strcpy(out,tmp);
+    *outputObj = PyObject_CallObject(pyLoadsFunc, pyArgs);
     Py_DECREF(pyArgs);
-    Py_DECREF(pyLoadedObject);
-    Py_DECREF(pyString);
-    // Py_Finalize();
 }

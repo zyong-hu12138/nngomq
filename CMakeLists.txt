@@ -21,11 +21,24 @@ include_directories(include)
 include_directories(${Python_INCLUDE_DIRS})
 # 生成动态链接库
 add_library(omq SHARED ${SRC_FILES})
+
+install(TARGETS omq
+        LIBRARY DESTINATION /home/study/build/lib
+        ARCHIVE DESTINATION /home/study/build/lib
+        RUNTIME DESTINATION /home/study/build/bin
+        INCLUDES DESTINATION /home/study/build/include
+        PUBLIC_HEADER DESTINATION /home/study/build/include)
+
+# find_package(nng REQUIRED)
+# target_link_libraries(omq PRIVATE nng::nng)  # 链接nng库
+# target_compile_definitions(omq PRIVATE NNG_ELIDE_DEPRECATED)
 # 示例代码可执行文件
-add_executable(test test/test1.cpp)
+add_executable(test test/test.cpp)
 # 链接动态链接库
-target_link_libraries(test omq)
+target_link_libraries(test  omq)
+
 find_package(nng REQUIRED)
 target_link_libraries(test nng::nng)#添加动态库文件
 target_compile_definitions(test PRIVATE NNG_ELIDE_DEPRECATED)#添加动态库文件)
+
 
