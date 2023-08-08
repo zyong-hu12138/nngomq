@@ -45,7 +45,7 @@ class REQ
                 fatal("nng_setopt_ms", rv);
             if((rv = nng_socket_set_ms(req_sock, NNG_OPT_RECVTIMEO, recv_timeout)) != 0)
                 fatal("nng_setopt_ms", rv);
-            char url[20];
+            char url[48];
             sprintf(url, "tcp://%s:%d", target.ip,target.port);
             if((rv = nng_dial(req_sock,url, NULL, 0)) != 0)
                 fatal("nng_dial", rv);//连接到指定的URL
@@ -68,7 +68,7 @@ class REQ
         void _exit();
         void _close();
         void _send(char *topic,PyObject *payload);
-        message send(char *topic,PyObject *payload);
+        PyObject * send(char *topic,PyObject *payload);
         void _send_thread();
         void _recv();
         void recv();
@@ -96,7 +96,7 @@ class REP  //响应请求
                 fatal("nng_rep0_open", rv);//创建socket
             if((rv = nng_socket_set_ms(rep_sock, NNG_OPT_RECVTIMEO, 1000)) != 0)
                 fatal("nng_setopt_ms", rv);
-            char url[20];
+            char url[48];
             //监听端口
             port = addr.port;
             // while(1)
@@ -117,12 +117,12 @@ class REP  //响应请求
         }   
         void _enter();
         void _exit();
-        void main_thread(message (*func)(char *,PyObject *));
+        void main_thread(PyObject* (*func)(char *,PyObject *));
         void _close();
        // void notify_thread();暂时不考虑
-        void loop_start(message (*func)(char *,PyObject *));
-        void loop_forever(message (*func)(char *,PyObject *));
+        void loop_start(PyObject* (*func)(char *,PyObject *));
+        void loop_forever(PyObject* (*func)(char *,PyObject *));
 
 };
-void req(Address name,char *topic,PyObject *payload,int send_timeout = 1000,int recv_timeout = 1000 ,bool is_async = true);
+PyObject * req(Address name,char *topic,PyObject *payload,int send_timeout = 1000,int recv_timeout = 1000 ,bool is_async = true);
 #endif

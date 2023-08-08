@@ -11,7 +11,7 @@
 #define SEPARATOR "^&*;"
 using namespace std;
 mutex mtx;//声明互斥锁对象
-vector<message> msg_recv;
+vector<message> msg_recv;//rep返回队列
 // ReqRepMulticast *udp;
 //REQ类中函数的实现
 void REQ::_enter()
@@ -63,10 +63,9 @@ void REQ::_send_thread()
             if((rv = nng_recv(req_sock,&buf, &size, NNG_FLAG_ALLOC)) != 0)
                 fatal("nng_recv", rv);
             //得到topic和序列化后的payload
-            char *topic = strtok(buf, SEPARATOR);
-            char *payload_str = strtok(NULL, SEPARATOR);
+            char *topic = "is_async";
             PyObject *payload ;
-            getPyObjectAsString(payload_str, size-strlen(topic)-strlen(SEPARATOR) , &payload);
+            getPyObjectAsString(buf, size, &payload);
             //得到payload的值
            message tmp = {topic,payload};
             msg_recv.push_back(tmp);
@@ -74,14 +73,14 @@ void REQ::_send_thread()
         }
     }
 }
-message REQ::send(char *topic,PyObject *payload)
+PyObject* REQ::send(char *topic,PyObject *payload)
 {
     if(is_async)
     { 
         message msg;
         msg = {topic,payload};
         _queue.push_back(msg);
-        return msg;
+        return payload;
     }
     else
     {  
@@ -93,12 +92,9 @@ message REQ::send(char *topic,PyObject *payload)
         if((rv = nng_recv(req_sock, &buf, &size, NNG_FLAG_ALLOC)) != 0)
             fatal("nng_recv", rv);
         //得到topic 和序列化后的payload
-        char *topic = strtok(buf, SEPARATOR);
-        char *payload_str = strtok(NULL, SEPARATOR);
         PyObject *payload ;
-        getPyObjectAsString(payload_str,size-strlen(topic)-strlen(SEPARATOR),&payload);
-        message msg={topic,payload};
-        return msg;
+        getPyObjectAsString(buf, size, &payload);
+        return payload;
     }
 }
 void REQ::_recv()
@@ -153,7 +149,7 @@ void REP::_exit()
 {
     nng_close(rep_sock);
 }
-void REP::main_thread(message (*func)(char* ,PyObject *))//接收消息并通过回调函数回复消息,回调函数接收主题和payload，返回消息体
+void REP::main_thread(PyObject* (*func)(char* ,PyObject *))//接收消息并通过回调函数回复消息,回调函数接收主题和payload，返回消息体
 {
     int rv;
     char *buf = NULL;
@@ -174,21 +170,19 @@ void REP::main_thread(message (*func)(char* ,PyObject *))//接收消息并通过
         _queue.push_back(msg);
         if(func!=NULL)
         {
-            message reply_msg = func(topic,payload); //pyobect
-            char *reply_topic = reply_msg.topic;
-            PyObject *reply_payload = reply_msg.payload;
-            char *buf = NULL;
-            buf = (char*)malloc(1024*sizeof(char));
+            PyObject* reply_payload = func(topic,payload); //pyobect
+        
+            char *buf;
+            buf = (char*)malloc(1024*10*1024*sizeof(char));
             PyObject *pyBytes = congverStringToBytes(reply_payload);
-            PyObject_Print(pyBytes, stdout, Py_PRINT_RAW);
             Py_ssize_t sz;
             PyBytes_AsStringAndSize(pyBytes, &buf, &sz);
-            char *str = new char[strlen(topic) + sz + strlen(SEPARATOR)];
-            int len = sprintf(str, "%s%s", reply_topic, SEPARATOR);
-            memcpy(str + len, buf, sz);
-            size_t size = len+sz;
+            char *str = new char[sz];
+            memcpy(str , buf, sz);
+            size_t size = sz;
             if((rv = nng_send(rep_sock, str, size , 0)) != 0)
                 fatal("nng_send", rv);
+            // free(buf);
         }
         else{
             char *buf = NULL;
@@ -209,12 +203,12 @@ void REP::main_thread(message (*func)(char* ,PyObject *))//接收消息并通过
     }
     }
 }
-void REP::loop_start(message (*func)(char *,PyObject *))
+void REP::loop_start(PyObject* (*func)(char *,PyObject *))
 {
     thread tid(&REP::main_thread,this,func);
     tid.detach();//接收消息的线程
 }
-void REP::loop_forever(message (*func)(char *,PyObject *))
+void REP::loop_forever(PyObject* (*func)(char *,PyObject *))
 {
     main_thread(func);
 }
@@ -230,7 +224,7 @@ char* REQ::find_ip()
 vector <REQ> reqlist;
 
 
-void req(Address name,char *topic,PyObject *payload,int send_timeout,int recv_timeout ,bool is_async)
+PyObject *req(Address name,char *topic,PyObject *payload,int send_timeout,int recv_timeout ,bool is_async)
 {
     int name_port = name.port;
     char *name_ip = name.ip;
@@ -238,8 +232,8 @@ void req(Address name,char *topic,PyObject *payload,int send_timeout,int recv_ti
     {
         // REQ req(name,send_timeout,recv_timeout,is_async);//is_async==false时可以实现，true _queue有问题
         reqlist.emplace_back(name,send_timeout,recv_timeout,is_async);
-        message msg = reqlist[0].send(topic,payload);
-
+        PyObject* recv_payload = reqlist[0].send(topic,payload);
+        return recv_payload;
     }
   
     else
@@ -253,8 +247,8 @@ void req(Address name,char *topic,PyObject *payload,int send_timeout,int recv_ti
                 lock_guard<mutex> lock(mtx);
                 if(reqlist[i].set_timeout(send_timeout , recv_timeout) != 0)
                     printf("set timeout failure");
-                reqlist[i].send(topic,payload);
-                break;
+                PyObject *recv_payload = reqlist[i].send(topic,payload);
+                return recv_payload;
             }
 
         }
@@ -262,7 +256,8 @@ void req(Address name,char *topic,PyObject *payload,int send_timeout,int recv_ti
             {
                 REQ req(name,send_timeout,recv_timeout,is_async);
                 reqlist.push_back(req);
-                reqlist[i+1].send(topic,payload);
+                PyObject *recv_payload = reqlist[i].send(topic,payload);
+                return recv_payload;
             }
     }
 }

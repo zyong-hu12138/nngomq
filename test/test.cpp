@@ -15,20 +15,16 @@ int main()
     REP rep(Addrlib.test);
     char topic[24] = "hello";
     PyObject *payload = convertIntToPyObject(1);
-    message callback(char *topic,PyObject *payload);
+    PyObject* callback(char *topic,PyObject *payload);
     rep.loop_start(callback);//rep接收消息
-    req(Addrlib.test,topic,payload,100,100,true);  
+    PyObject* recv = req(Addrlib.test,topic,payload,100,100,false);  
     sleep(1);
-    printf(msg_recv[0].topic);
     //python printf(msg_recv[0].payload);
-    PyObject_Print(msg_recv[0].payload, stdout, Py_PRINT_RAW);
+    PyObject_Print(recv, stdout, Py_PRINT_RAW);
     return 0;
 }
-message  callback(char *topic,PyObject* payload)
+PyObject*  callback(char *topic,PyObject* payload)
 {
-    message msg;
-    msg.topic = "camera";
-
     PyObject *tmp = convertIntToPyObject(1);
     if(payload == tmp)
     {
@@ -52,14 +48,13 @@ message  callback(char *topic,PyObject* payload)
         // 将创建的字典赋值给 aObj.camera_id
         PyObject_SetAttrString(aObj, "camera_id", cameraIdDict);
 
-        msg.payload = aObj;
-        return msg;
+        return aObj;
     }
     else
     {
         cout<<"error"<<endl;
-        msg.payload = convertIntToPyObject(0);
-        return msg;
+        PyObject *payload = convertIntToPyObject(0);
+        return payload;
     }
     // cout<<"callback"<<endl;
     // printf("topic:%s,payload:%s\n",topic,payload);
@@ -67,12 +62,3 @@ message  callback(char *topic,PyObject* payload)
 PyObject* convertIntToPyObject(int value) {
     return PyLong_FromLong(value);
 }
-// int main()
-// {
-//     ReqRepMulticast udp;
-//     udp.loop(Addrlib.test,"127.0.0.1",51001);
-//     ReqRepMulticast udp1;
-//     udp1.listen_loop();
-//     sleep(20);
-//     return 0;
-// }

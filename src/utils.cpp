@@ -16,7 +16,7 @@ int  get_local_ip(char *ip){
 	int sockfd;
 	struct ifconf ifc;
 	char buf[1024]={0};
-	char ipbuf[20]={0};
+	char ipbuf[48]={0};
 	struct ifreq *ifr;
  
 	ifc.ifc_len = 1024;

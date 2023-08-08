@@ -21,13 +21,7 @@ include_directories(include)
 include_directories(${Python_INCLUDE_DIRS})
 # 生成动态链接库
 add_library(omq SHARED ${SRC_FILES})
-
-install(TARGETS omq
-        LIBRARY DESTINATION /home/study/build/lib
-        ARCHIVE DESTINATION /home/study/build/lib
-        RUNTIME DESTINATION /home/study/build/bin
-        INCLUDES DESTINATION /home/study/build/include
-        PUBLIC_HEADER DESTINATION /home/study/build/include)
+find_package(nng REQUIRED)
 
 # find_package(nng REQUIRED)
 # target_link_libraries(omq PRIVATE nng::nng)  # 链接nng库
@@ -41,4 +35,13 @@ find_package(nng REQUIRED)
 target_link_libraries(test nng::nng)#添加动态库文件
 target_compile_definitions(test PRIVATE NNG_ELIDE_DEPRECATED)#添加动态库文件)
 
+install(TARGETS omq
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+        PUBLIC_HEADER DESTINATION include)
+install(FILES include/omq.h include/bus.h include/parameter.h 
+        include/pickle.h include/reqrep.h include/udp.h include/utils.h 
+        DESTINATION include/omq)
 

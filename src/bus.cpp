@@ -15,7 +15,7 @@ Bus::Bus(char *ip,int port)
     int rv;
     if((rv = nng_bus0_open(&bus_sock)) != 0)
         sprintf(error,"nng_bus_open error:%s",strerror(errno));
-    char url[20];
+    char url[48];
     sprintf(url, "tcp://%s:%d",ip,port);
     if((rv = nng_listen(bus_sock, url, NULL, 0)) != 0)
         fatal("nng_listen", rv);
